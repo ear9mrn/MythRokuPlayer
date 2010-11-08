@@ -34,7 +34,13 @@ End Function
 Function checkServerUrl() as Void
 
 	serverURL = RegRead("ServerURL")
-	print serverURL
+	
+	'set to a default value if reg is empty
+	if (serverURL = invalid)
+		print "ServerURL not found in the registry"
+		serverURL = "http://192.168.1.8/mythweb/mythroku"
+		RegWrite("ServerURL", serverURL)
+        endif
 
 	http = NewHttp(serverURL + "/mythtv.php")
 
@@ -43,9 +49,8 @@ Function checkServerUrl() as Void
     	rsp = http.GetToStringWithRetry()
 	xml=CreateObject("roXMLElement")
 
-	if (serverURL = invalid) OR not xml.Parse(rsp) then
+	if not xml.Parse(rsp) then
            if (serverURL = invalid) then
-		print "ServerURL not found in the registry"
 		serverURL = "http://192.168.1.8/mythweb/mythroku"
 	   else 'something has been entered but does not point to the mythroku
 		print "ServerURL invalid"
