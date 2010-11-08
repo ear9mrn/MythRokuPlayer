@@ -5,5 +5,5 @@ mm_icon_side_hd=pkg:/images/mythtv_logo_SD.png
 mm_icon_focus_sd=pkg:/images/mythtv_logo_SD.png
 mm_icon_side_sd=pkg:/images/mythtv_logo_SD.png
 major_version=1
-minor_version=0
+minor_version=1
 build_version=00001
