@@ -62,7 +62,7 @@ Function checkServerUrl() as Void
 	screen.SetTitle("Video Server URL")
 	screen.SetText(serverURL)
 	screen.SetDisplayText("Enter URL for mythroku, e.g. http://myip/mythweb/mythroku")
-	screen.SetMaxLength(40)
+	screen.SetMaxLength(100)
 	screen.AddButton(1, "finished")
 	screen.Show()
 	
@@ -121,7 +121,7 @@ Function showHomeScreen(screen) As Integer
 			screen.SetTitle("Video Server URL")
 			screen.SetText(serverURL)
 			screen.SetDisplayText("Enter URL for mythroku, e.g. http://myip/mythweb/mythroku")
-			screen.SetMaxLength(40)
+			screen.SetMaxLength(100)
 			screen.AddButton(1, "finished")
 			screen.Show()
 	
