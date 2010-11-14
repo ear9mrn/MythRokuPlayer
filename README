@@ -7,6 +7,7 @@ prerequisits:
 -functioning mythtv backend and mythweb
 -handbrakecli (for converting recordings to H.264 format)
 -Mythtv video are stored in H.264 format (mp4)
+-web user (eg. apache) permission to delete recordings
 
 for more information see the Roku developer site:
 http://www.roku.com/developer
@@ -32,6 +33,14 @@ http://www.roku.com/developer
         $type = 'video/mp4';
         $suffix = '.mp4';
 	}
+	
+	if you are using authentication to protect your mythweb (best practice)
+	you need to add the following to your mythweb.conf file (near the top)
+	
+	<LocationMatch .*/mythroku*>
+        	Allow from 192.168.1.0
+    	</LocationMatch>
+
 
 3) add the mythroku directory to your mythweb directory and change the permission
 	to that of your webserver. Ensure that the .htaccess file is in that directory
@@ -71,6 +80,9 @@ http://www.roku.com/developer
 	telnet $ROKU_DEV_TARGET 8085
 
 	will give you any output from the player for debug
+
+	You may need to comment out the following line
+	bind-address = 127.0.0.1 in /etc/my.cnf to allow access to mysql
 
 	I have created two php files
 	

@@ -68,6 +68,26 @@ Function showDetailScreen(screen As Object, showList As Object, showIndex as Int
                     showList[showIndex].PlayStart = 0
                     showVideoScreen(showList[showIndex])
                 endif
+		if msg.GetIndex() = 7
+			print "delete button pressed " + showList[showIndex].DelCommand
+
+			Dbg("MythRoku: Confirm delete recording.")
+   			title = "MythRoku: Confirm delete recording."
+   			text  = "Are you sure you want to delete this recording?"
+
+    			if ShowDialog2Buttons(title, text, "Yes", "no, return") = 0
+				http = NewHttp(showList[showIndex].DelCommand)
+				Dbg("url: ", http.Http.GetUrl())
+				rsp = http.GetToStringWithRetry()
+				showList.Delete(showIndex)
+				kid = m.Categories.Kids[0]
+				displayCategoryPosterScreen(kid)
+				
+			else 
+				refreshShowDetail(screen, showList, showIndex)			
+			endif
+
+                endif
                 if msg.GetIndex() = 3
                 endif
                 print "Button pressed: "; msg.GetIndex(); " " msg.GetData()
@@ -80,7 +100,6 @@ Function showDetailScreen(screen As Object, showList As Object, showIndex as Int
     return showIndex
 
 End Function
-
 '**************************************************************
 '** Refresh the contents of the show detail screen. This may be
 '** required on initial entry to the screen or as the user moves
@@ -101,8 +120,13 @@ Function refreshShowDetail(screen As Object, showList As Object, showIndex as In
     'PrintAA(show)
 
     screen.ClearButtons()
-    screen.AddButton(1, "resume playing")    
-    screen.AddButton(2, "play from beginning")    
+    screen.AddButton(1, "Resume Playing")    
+    screen.AddButton(2, "Play from Beginning")  
+  
+    if show["tvormovie"] = "tv"
+	 screen.AddButton(7, "Delete")   
+    endif
+
     screen.SetContent(show)
     screen.Show()
 

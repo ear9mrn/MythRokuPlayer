@@ -146,6 +146,7 @@ Function showHomeScreen(screen) As Integer
 		elseif kid.type = "special_category" then
                     displaySpecialCategoryScreen()
                 else
+		    print "cat"
                     displayCategoryPosterScreen(kid)
                 end if
             else if msg.isScreenClosed() then

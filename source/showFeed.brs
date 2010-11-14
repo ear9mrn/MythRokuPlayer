@@ -137,8 +137,11 @@ Function parse_show_feed(xml As Object, feed As Object) As Void
         item.ContentQuality   = validstr(curShow.contentQuality.GetText())
         item.Synopsis         = validstr(curShow.synopsis.GetText())
         item.Genre            = validstr(curShow.genres.GetText())
+	item.SubTitle         = validstr(curShow.subtitle.GetText())
         item.Runtime          = validstr(curShow.runtime.GetText())
 	item.Date             = validstr(curShow.date.GetText())
+	item.DelCommand       = validstr(curShow.delcommand.GetText())
+	item.TVorMovie        = validstr(curShow.tvormov.GetText())
 	item.StarRating	      = validstr(curShow.starrating.GetText())	
         item.HDBifUrl         = validstr(curShow.hdBifUrl.GetText())
         item.SDBifUrl         = validstr(curShow.sdBifUrl.GetText())
@@ -149,7 +152,7 @@ Function parse_show_feed(xml As Object, feed As Object) As Void
         
         'map xml attributes into screen specific variables
         item.ShortDescriptionLine1 = item.Title 
-        item.ShortDescriptionLine2 = item.genre + ". " + item.Date '+ " " + item.Description
+        item.ShortDescriptionLine2 = item.subtitle + ". " + item.Date
         item.HDPosterUrl           = item.hdImg
         item.SDPosterUrl           = item.sdImg
 

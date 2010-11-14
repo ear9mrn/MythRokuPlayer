@@ -1,12 +1,11 @@
 <?php
 
-
-
 require_once './settings.php';
-
 
 $db_handle = mysql_connect($MysqlServer, $MythTVdbuser, $MythTVdbpass);
 $db_found = mysql_select_db($MythTVdb, $db_handle);
+
+
 $counter = 1000;
 
 if ($db_found) {
@@ -42,9 +41,11 @@ Use this page to help diagnose any problems there may be with settings and confi
 while ($db_field = mysql_fetch_assoc($result)) {
 
         $genrenum = mysql_fetch_assoc(mysql_query("SELECT idgenre FROM videometadatagenre where idvideo='" . $db_field['intid'] . "' "));
+	
 	if ($genrenum['idgenre'] == 0 ) { $genrenum['idgenre'] = 22; }
-        $genre = mysql_fetch_assoc(mysql_query("SELECT genre FROM videogenre where intid='" . $genrenum['idgenre'] . "' "));
-
+        
+	$genre = mysql_fetch_assoc(mysql_query("SELECT genre FROM videogenre where intid='" . $genrenum['idgenre'] . "' "));
+	
         print 
         "<br><b>" . $db_field['title'] . "</b><br>
 

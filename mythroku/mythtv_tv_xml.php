@@ -29,6 +29,15 @@ if ($db_found) {
 $result = mysql_query($SQL);
 $num_rows = mysql_num_rows($result);
 
+//check if appropriate mp4 files exists for each recording
+while ($db_field = mysql_fetch_assoc($result)) {
+
+	if ( !file_exists("../data/recordings/" . RemoveExtension($db_field['basename'] ) . ".mp4" ) ){
+		$num_rows = $num_rows - 1;
+		} 
+
+}
+
 //print the xml header
 print "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?> 
 	<feed>
@@ -38,43 +47,53 @@ print "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
 	<endIndex>" . $num_rows . "</endIndex>";
 
 
+//reset pointer
+mysql_data_seek ( $result , 0 );
+
 while ($db_field = mysql_fetch_assoc($result)) {
 
-//compute the length of the show
-$ShowLength = convert_datetime($db_field['endtime']) - convert_datetime($db_field['starttime']);
+	//only show mp4 recordings
+	if ( file_exists("../data/recordings/" . RemoveExtension($db_field['basename'] ) . ".mp4" ) ){
 
-//print out all the records in xml format for roku to read 
-print "	
-	<item sdImg=\"" . $WebServer . "/tv/get_pixmap/" . $db_field['hostname'] . "/" . $db_field['chanid'] ."/" . convert_datetime($db_field['starttime']) . "/100/75/-1/" . $db_field['basename'] .".100x75x-1.png\" hdImg=\"" . $WebServer . "/tv/get_pixmap/" . $db_field['hostname'] . "/" . $db_field['chanid'] . "/" . convert_datetime($db_field['starttime']) . "/100/75/-1/" . $db_field['basename'] . ".100x75x-1.png\">
-		<title>" . $db_field['title'] . "</title>
-		<contentId>" . $counter++ . "</contentId>
-		<contentType>TV</contentType>
-		<contentQuality>". $RokuDisplayType . "</contentQuality>
-		<media>
-			<streamFormat>mp4</streamFormat>
-			<streamQuality>". $RokuDisplayType . "</streamQuality>
-			<streamBitrate>" . $BitRate . "</streamBitrate>
-			<streamUrl>" . $WebServer . "/pl/stream/" . $db_field['chanid'] . "/" . convert_datetime($db_field['starttime']) . ".mp4</streamUrl>
-		</media>
-		<synopsis>" . htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['description'] )) . "</synopsis>
-		<genres>" . $db_field['category'] . "</genres>
-		<runtime>" . $ShowLength . "</runtime>
-		<date>" . date("F j, Y, g:i a", convert_datetime($db_field['starttime'])) . "</date>
-	</item>";	
+		//compute the length of the show
+		$ShowLength = convert_datetime($db_field['endtime']) - convert_datetime($db_field['starttime']);
+
+		//print out all the records in xml format for roku to read 
+		print "	
+		<item sdImg=\"" . $WebServer . "/tv/get_pixmap/" . $db_field['hostname'] . "/" . $db_field['chanid'] ."/" . convert_datetime($db_field['starttime']) . "/100/75/-1/" . $db_field['basename'] .".100x75x-1.png\" hdImg=\"" . $WebServer . "/tv/get_pixmap/" . $db_field['hostname'] . "/" . $db_field['chanid'] . "/" . convert_datetime($db_field['starttime']) . "/100/75/-1/" . $db_field['basename'] . ".100x75x-1.png\">
+			<title>" . $db_field['title'] . "</title>
+			<contentId>" . $counter++ . "</contentId>
+			<contentType>TV</contentType>
+			<contentQuality>". $RokuDisplayType . "</contentQuality>
+			<media>
+				<streamFormat>mp4</streamFormat>
+				<streamQuality>". $RokuDisplayType . "</streamQuality>
+				<streamBitrate>" . $BitRate . "</streamBitrate>
+				<streamUrl>" . $WebServer . "/pl/stream/" . $db_field['chanid'] . "/" . convert_datetime($db_field['starttime']) . ".mp4</streamUrl>
+			</media>
+			<synopsis>" . htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['description'] )) . "</synopsis>
+			<genres>" . $db_field['category'] . "</genres>
+			<subtitle>" . $db_field['subtitle'] . "</subtitle>
+			<runtime>" . $ShowLength . "</runtime>
+			<date>" . date("F j, Y, g:i a", convert_datetime($db_field['starttime'])) . "</date>
+			<tvormov>tv</tvormov>
+			<delcommand>" . $WebServer . "/mythroku/mythtv_tv_del.php?recordid=" . convert_datetime($db_field['starttime']) . "</delcommand>
+		</item>";	
 	}
-
+}
 print "</feed>";
 
-//close mysql pointer
-mysql_close($db_handle);
-
-	}
+}
 
 //throw error if can not connect to database
 else {
 	print "Database NOT Found ";
-	mysql_close($db_handle);
+
 }
+
+//close mysql pointer
+mysql_close($db_handle);
+
 
 //function to convert mysql timestamp to unix time
 function convert_datetime($str) 
@@ -88,4 +107,17 @@ function convert_datetime($str)
 
 	return $timestamp;
 }
+
+//function to remove file extensions
+function RemoveExtension($strName)
+{  
+     $ext = strrchr($strName, '.');  
+
+     if($ext !== false)  
+     {  
+         $strName = substr($strName, 0, -strlen($ext));  
+     }  
+     return $strName;  
+}  
+
 ?>

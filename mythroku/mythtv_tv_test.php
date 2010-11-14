@@ -1,9 +1,6 @@
 <?php
 
-
-
 require_once './settings.php';
-
 
 $db_handle = mysql_connect($MysqlServer, $MythTVdbuser, $MythTVdbpass);
 $db_found = mysql_select_db($MythTVdb, $db_handle);
