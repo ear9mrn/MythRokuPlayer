@@ -73,7 +73,7 @@ while ($db_field = mysql_fetch_assoc($result)) {
 			</media>
 			<synopsis>" . htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['description'] )) . "</synopsis>
 			<genres>" . $db_field['category'] . "</genres>
-			<subtitle>" . $db_field['subtitle'] . "</subtitle>
+			<subtitle>" . htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['subtitle'] )) . "</subtitle>
 			<runtime>" . $ShowLength . "</runtime>
 			<date>" . date("F j, Y, g:i a", convert_datetime($db_field['starttime'])) . "</date>
 			<tvormov>tv</tvormov>
