@@ -43,7 +43,7 @@ while ($db_field = mysql_fetch_assoc($result)) {
 
         print 
         "<br><b>" . $db_field['title'] . "</b><br>
-
+	Subtitle: " . htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['subtitle'] )) . "<br><br>
         <a href=\"" . $WebServer . "/pl/stream/" . $db_field['chanid'] . "/" . convert_datetime($db_field['starttime']) .".mp4\"> <img src=\"" . $WebServer . "/tv/get_pixmap/" . $db_field['hostname'] . "/" . $db_field['chanid'] ."/" . convert_datetime($db_field['starttime']) . "/100/75/-1/" . $db_field['basename'] .".100x75x-1.png\"></a><br>
 	Stream ID: " . $counter++ . "<br>
 	Type: TV<br>
