@@ -17,6 +17,8 @@ if ($db_found) {
 		$SQL = "SELECT * FROM recorded ORDER BY starttime DESC";
 	}elseif (isset($_GET['sort']) && $_GET['sort'] == 'title'){
 		$SQL = "SELECT * FROM recorded ORDER BY title ASC";
+	}elseif (isset($_GET['sort']) && $_GET['sort'] == 'recgroup'){
+		$SQL = "SELECT * FROM recorded ORDER BY recgroup ASC";
 	}elseif (isset($_GET['sort']) && $_GET['sort'] == 'genre'){
 		$SQL = "SELECT * FROM recorded ORDER BY category ASC";
 	}elseif (isset($_GET['sort']) && $_GET['sort'] == 'channel'){
