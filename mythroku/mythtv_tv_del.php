@@ -13,10 +13,11 @@ if ($db_found) {
 	if (isset($_GET['recordid']) ) {
 
 		$mysqltime = unixToMySQL($_GET['recordid']);
-		$unixt = convert_datetime($mysqltime); 
+		//$unixt = convert_datetime($mysqltime); 
 		mysql_query("DELETE FROM recorded WHERE starttime = '$mysqltime' ");
 
-		$files = glob('../data/recordings/*' . $unixt . '*');
+		//$files = glob('../data/recordings/*' . $unixt . '*');
+		$files = glob('../data/recordings/*' . $_GET['basename'] . '*');
 		array_walk($files,'myunlink');
 
 		
