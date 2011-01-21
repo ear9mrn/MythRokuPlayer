@@ -29,7 +29,7 @@ Function showVideoScreen(episode As Object)
     screen.SetContent(episode)
     screen.Show()
 
-    'Uncomment his line to dump the contents of the episode to be played
+    'Uncomment this line to dump the contents of the episode to be played
     'PrintAA(episode)
 
     while true

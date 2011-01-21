@@ -7,7 +7,7 @@
    if (isset($_GET['image'])) {
      
      $image = new SimpleImage();
-     $image->load("../data/video_covers/" . $_GET['image']);
+     $image->load($mythtvdata . "/video_covers/" . $_GET['image']);
    	if ($RokuDisplayType == 'HD' ) {
    			$image->resizeToWidth(250);
 		} else {

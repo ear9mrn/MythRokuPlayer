@@ -152,7 +152,7 @@ Function parse_show_feed(xml As Object, feed As Object) As Void
         
         'map xml attributes into screen specific variables
         item.ShortDescriptionLine1 = item.Title 
-        item.ShortDescriptionLine2 = item.subtitle + ". " + item.Date
+        item.ShortDescriptionLine2 = item.subtitle + " " + item.Date
         item.HDPosterUrl           = item.hdImg
         item.SDPosterUrl           = item.sdImg
 
@@ -168,12 +168,13 @@ Function parse_show_feed(xml As Object, feed As Object) As Void
         item.IsHD = true
         'item.StarRating = "50"
         item.ContentType = "episode" 
-
+ 	item.StreamBitrates = [0]	
+	
         'media may be at multiple bitrates, so parse an build arrays
         for idx = 0 to 4
             e = curShow.media[idx]
             if e  <> invalid then
-                item.StreamBitrates.Push(strtoi(validstr(e.streamBitrate.GetText())))
+                'item.StreamBitrates.Push(strtoi(validstr(e.streamBitrate.GetText())))
                 item.StreamQualities.Push(validstr(e.streamQuality.GetText()))
                 item.StreamUrls.Push(validstr(e.streamUrl.GetText()))
             endif
