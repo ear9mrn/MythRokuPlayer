@@ -10,14 +10,11 @@ $db_found = mysql_select_db($MythTVdb, $db_handle);
 
 if ($db_found) { 
 
-	if (isset($_GET['recordid']) ) {
+	if (isset($_GET['basename']) ) {
 
-		$mysqltime = unixToMySQL($_GET['recordid']);
-		//$unixt = convert_datetime($mysqltime); 
-		mysql_query("DELETE FROM recorded WHERE starttime = '$mysqltime' ");
+		mysql_query("DELETE FROM recorded WHERE basename = '$_GET['basename']'");
 
-		//$files = glob('../data/recordings/*' . $unixt . '*');
-		$files = glob('../data/recordings/*' . $_GET['basename'] . '*');
+		$files = glob('../data/recordings/*' . RemoveExtension($db_field['basename'])  . '*');
 		array_walk($files,'myunlink');
 
 		
@@ -31,11 +28,18 @@ if ($db_found) {
 
 	mysql_close($db_handle);
 
-function unixToMySQL($timestamp)
-{
-    return date('Y-m-d H:i:s', $timestamp);
-}
 
+//function to remove file extensions
+function RemoveExtension($strName)
+{
+     $ext = strrchr($strName, '.');
+
+     if($ext !== false)
+     {
+         $strName = substr($strName, 0, -strlen($ext));
+     }
+     return $strName;
+}
 
 function myunlink($t)
 {
@@ -43,18 +47,6 @@ function myunlink($t)
 }
 
 
-//function to convert mysql timestamp to unix time
-function convert_datetime($str) 
-{
-
-	list($date, $time) = explode(' ', $str);
-	list($year, $month, $day) = explode('-', $date);
-	list($hour, $minute, $second) = explode(':', $time);
-
-	$timestamp = mktime($hour, $minute, $second, $month, $day, $year);
-
-	return $timestamp;
-}
 
 ?>
 

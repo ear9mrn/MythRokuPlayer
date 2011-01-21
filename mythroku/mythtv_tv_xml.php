@@ -79,7 +79,7 @@ while ($db_field = mysql_fetch_assoc($result)) {
 			<runtime>" . $ShowLength . "</runtime>
 			<date>" . date("F j, Y, g:i a", convert_datetime($db_field['starttime'])) . "</date>
 			<tvormov>tv</tvormov>
-			<delcommand>" . $WebServer . "/mythroku/mythtv_tv_del.php?recordid=" . convert_datetime($db_field['starttime']) . "&amp;basename=" . RemoveExtension($db_field['basename']) . "</delcommand>
+			<delcommand>" . $WebServer . "/mythroku/mythtv_tv_del.php?basename=" . $db_field['basename'] . "</delcommand>
 		</item>";	
 	}
 }
@@ -110,16 +110,5 @@ function convert_datetime($str)
 	return $timestamp;
 }
 
-//function to remove file extensions
-function RemoveExtension($strName)
-{  
-     $ext = strrchr($strName, '.');  
-
-     if($ext !== false)  
-     {  
-         $strName = substr($strName, 0, -strlen($ext));  
-     }  
-     return $strName;  
-}  
 
 ?>
