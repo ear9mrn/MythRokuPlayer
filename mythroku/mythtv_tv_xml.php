@@ -110,5 +110,17 @@ function convert_datetime($str)
 	return $timestamp;
 }
 
+//function to remove file extensions
+function RemoveExtension($strName)
+{
+     $ext = strrchr($strName, '.');
+
+     if($ext !== false)
+     {
+         $strName = substr($strName, 0, -strlen($ext));
+     }
+     return $strName;
+}
+
 
 ?>
