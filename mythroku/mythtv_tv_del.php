@@ -28,7 +28,6 @@ if ($db_found) {
 
 	mysql_close($db_handle);
 
-
 //function to remove file extensions
 function RemoveExtension($strName)
 {

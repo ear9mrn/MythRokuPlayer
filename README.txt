@@ -21,7 +21,9 @@ It is possible to easily use this as a template
 for a production application by implementing the 
 appropriate web service API's to provide the 
 category and content XML feeds. You must also
-provide the artwork and brand specific assets 
+oku 2010 Peter Nevill
+Unless otherwise stated (the @license tag at the top of the file), all files are distributed under 
+the GNU General Public License.
 appropriate for your application.
 
 Contents of the application directories are:
