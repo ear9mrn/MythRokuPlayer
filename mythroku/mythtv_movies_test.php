@@ -11,11 +11,11 @@ $counter = 1000;
 if ($db_found) {
 
         if (isset($_GET['sort']) && $_GET['sort'] == 'year') {
-		$SQL = "SELECT * FROM videometadata ORDER BY year DESC ";
+		$SQL = "SELECT * FROM videometadata WHERE filename LIKE '%.mp4' ORDER BY year DESC ";
 	}elseif (isset($_GET['sort']) && $_GET['sort'] == 'title'){
-		$SQL = "SELECT * FROM videometadata ORDER BY title ASC";
+		$SQL = "SELECT * FROM videometadata WHERE filename LIKE '%.mp4' ORDER BY title ASC";
 	}elseif (isset($_GET['sort']) && $_GET['sort'] == 'genre'){
-		$SQL = "SELECT * FROM videometadata ORDER BY category ASC";
+		$SQL = "SELECT * FROM videometadata WHERE filename LIKE '%.mp4' ORDER BY category ASC";
 	}
 	else {
 		$SQL = "SELECT * FROM videometadata";
