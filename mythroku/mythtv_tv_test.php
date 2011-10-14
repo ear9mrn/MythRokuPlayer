@@ -39,6 +39,7 @@ Use this page to help diagnose any problems there may be with settings and confi
 
 while ($db_field = mysql_fetch_assoc($result)) {
 
+	if ( file_exists("../data/recordings/" . RemoveExtension($db_field['basename'] ) . ".mp4" ) ) {
         $ShowLength = convert_datetime($db_field['endtime']) - convert_datetime($db_field['starttime']);
 
         print 
@@ -60,6 +61,7 @@ while ($db_field = mysql_fetch_assoc($result)) {
 
 print "</body></html>";
 
+	}
        mysql_close($db_handle);
 
         }
@@ -80,5 +82,17 @@ $timestamp = mktime($hour, $minute, $second, $month, $day, $year);
 
 return $timestamp;
 }
+//function to remove file extensions
+function RemoveExtension($strName)
+{
+     $ext = strrchr($strName, '.');
+
+     if($ext !== false)
+     {
+         $strName = substr($strName, 0, -strlen($ext));
+     }
+     return $strName;
+}
+
 
 ?>
