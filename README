@@ -80,7 +80,7 @@ http://www.roku.com/developer
 
 6) Debuging, you have a couple of options:
 	
-	telnet $ROKU_DEV_TARGET 8085
+	telnet $ROKU_DEV_TARGET 8080
 
 	will give you any output from the player for debug
 
