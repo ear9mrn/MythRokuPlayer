@@ -7,7 +7,7 @@ It is based on the videoplayer example from Roku
 
 prerequisits:
 
--functioning mythtv backend and mythweb
+-functioning mythtv backend and mythweb (with function streaming of recordings)
 -handbrakecli (for converting recordings to H.264 format)
 -Mythtv video are stored in H.264 format (mp4)
 -web user (eg. apache) permission to delete recordings
