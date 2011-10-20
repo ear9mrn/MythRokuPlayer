@@ -45,7 +45,7 @@ http://www.roku.com/developer
     	</LocationMatch>
 
 
-3) add the mythroku directory to your mythweb directory and change the permission
+3) add the MythRokuPlayer directory to your mythweb directory and change the permission
 	to that of your webserver. Ensure that the .htaccess file is in that directory
         as well. The .htaccess file in the mythroku directory simply has:
 
