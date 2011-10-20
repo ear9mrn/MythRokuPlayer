@@ -69,7 +69,8 @@ http://www.roku.com/developer
 	streamed by roku
 	
 5) install mythroku to your roku player
-	in the mythroku directory (containing this read me) simply type
+	in the mythroku directory (containing this read me,
+		this has to be called "MythRokuPlayer") simply type
 	
 	make install
 

@@ -9,15 +9,15 @@ $counter = 1000;
 if ($db_found) {
 
         if (isset($_GET['sort']) && $_GET['sort'] == 'date') {
-                $SQL = "SELECT * FROM recorded ORDER BY starttime DESC";
+                $SQL = "SELECT * FROM recorded WHERE filename LIKE '%.mp4' ORDER BY starttime DESC";
         }elseif (isset($_GET['sort']) && $_GET['sort'] == 'title'){
-                $SQL = "SELECT * FROM recorded ORDER BY title ASC";
+                $SQL = "SELECT * FROM recorded WHERE filename LIKE '%.mp4' ORDER BY title ASC";
         }elseif (isset($_GET['sort']) && $_GET['sort'] == 'genre'){
-                $SQL = "SELECT * FROM recorded ORDER BY category ASC";
+                $SQL = "SELECT * FROM recorded WHERE filename LIKE '%.mp4' ORDER BY category ASC";
         }elseif (isset($_GET['sort']) && $_GET['sort'] == 'channel'){
-                $SQL = "SELECT * FROM recorded ORDER BY channel ASC";
+                $SQL = "SELECT * FROM recorded WHERE filename LIKE '%.mp4' ORDER BY channel ASC";
         }else {
-                $SQL = "SELECT * FROM recorded";
+                $SQL = "SELECT * FROM recorded WHERE filename LIKE '%.mp4'";
         }
 
         $result = mysql_query($SQL);
@@ -39,7 +39,7 @@ Use this page to help diagnose any problems there may be with settings and confi
 
 while ($db_field = mysql_fetch_assoc($result)) {
 
-	if ( file_exists("../data/recordings/" . RemoveExtension($db_field['basename'] ) . ".mp4" ) ) {
+	//need some error checking  here if file could not be found or art work missing etc.....
         $ShowLength = convert_datetime($db_field['endtime']) - convert_datetime($db_field['starttime']);
 
         print 
@@ -61,7 +61,7 @@ while ($db_field = mysql_fetch_assoc($result)) {
 
 print "</body></html>";
 
-	}
+	
        mysql_close($db_handle);
 
         }

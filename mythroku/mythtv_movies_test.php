@@ -18,7 +18,7 @@ if ($db_found) {
 		$SQL = "SELECT * FROM videometadata WHERE filename LIKE '%.mp4' ORDER BY category ASC";
 	}
 	else {
-		$SQL = "SELECT * FROM videometadata";
+		$SQL = "SELECT * FROM videometadata WHERE filename LIKE '%.mp4'";
 	}
 
         $result = mysql_query($SQL);
