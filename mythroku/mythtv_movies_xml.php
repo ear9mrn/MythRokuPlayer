@@ -3,6 +3,12 @@
 //get the local info from the settings file
 require_once './settings.php';
 
+// Put any command line arguments in $_GET
+if ( $argv[1] )
+{
+    parse_str($argv[1], $_GET);
+}
+
 //make a connection to the mysql sever
 $db_handle = mysql_connect($MysqlServer, $MythTVdbuser, $MythTVdbpass);
 $db_found = mysql_select_db($MythTVdb, $db_handle);
@@ -44,7 +50,7 @@ while ($db_field = mysql_fetch_assoc($result) ) {
         $genre = mysql_fetch_assoc(mysql_query("SELECT genre FROM videogenre where intid='" . $genrenum['idgenre'] . "' "));
 
 		print "	
-		<item sdImg=\"" . $WebServer . "/mythweb/mythroku/image.php?image=" . implode("/", array_map("rawurlencode", explode("/", $db_field['coverfile']))) . "\" hdImg=\"" . $WebServer . "/mythroku/image.php?image=" . implode("/", array_map("rawurlencode", explode("/", $db_field['coverfile']))) . "\">
+		<item sdImg=\"" . $WebServer . "/mythroku/image.php?image=" . implode("/", array_map("rawurlencode", explode("/", $db_field['coverfile']))) . "\" hdImg=\"" . $WebServer . "/mythroku/image.php?image=" . implode("/", array_map("rawurlencode", explode("/", $db_field['coverfile']))) . "\">
 			<title>" . htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['title'] )) . "</title>
 			<contentId>" . $counter++ . "</contentId>
 			<contentType>Movies</contentType>
@@ -58,7 +64,7 @@ while ($db_field = mysql_fetch_assoc($result) ) {
 			<synopsis>" . htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['plot'] )) . "</synopsis>	
 			<genres>" . $genre['genre'] . "</genres>
 			<runtime>" .$db_field['length'] . "</runtime>
-			<date>Year: " . $db_field['year'] . "</date>
+			<date>" . $db_field['year'] . "</date>
 			<tvormov>movie</tvormov>
 			<starrating>" . $db_field['userrating'] * 10 ."</starrating>
 		</item>";	

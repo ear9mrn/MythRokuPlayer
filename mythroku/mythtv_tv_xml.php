@@ -3,6 +3,12 @@
 //get the local info from the settings file
 require_once './settings.php';
 
+// Put any command line arguments in $_GET
+if ( $argv[1] )
+{
+    parse_str($argv[1], $_GET);
+}
+
 //make a connection to the mysql sever
 $db_handle = mysql_connect($MysqlServer, $MythTVdbuser, $MythTVdbpass);
 $db_found = mysql_select_db($MythTVdb, $db_handle);
