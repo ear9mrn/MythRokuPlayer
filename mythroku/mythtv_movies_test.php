@@ -5,7 +5,6 @@ require_once './settings.php';
 $db_handle = mysql_connect($MysqlServer, $MythTVdbuser, $MythTVdbpass);
 $db_found = mysql_select_db($MythTVdb, $db_handle);
 
-
 $counter = 1000;
 
 if ($db_found) {
@@ -49,13 +48,13 @@ while ($db_field = mysql_fetch_assoc($result)) {
         print 
         "<br><b>" . $db_field['title'] . "</b><br>
 
-        <a href=\"" . $WebServer . "/data/video/" . rawurlencode($db_field['filename']) . "\"> <img src=\"" . $WebServer . "/pl/coverart/" . $db_field['coverfile'] . " \" width=\"200\" height=\"250\" ></a><br>
+        <a href=\"" . $WebServer . "/data/video/" . implode("/", array_map("rawurlencode", explode("/", $db_field['filename']))) . "\"> <img src=\"" . $WebServer . "/pl/coverart/" . $db_field['coverfile'] . " \" width=\"200\" height=\"250\" ></a><br>
 	Stream ID: " . $counter++ . "<br>
 	Type: Movie<br>
         Quality: . $RokuDisplayType . <br>
         Stream Format: mp4<br>
         Stream Bitrate: ". $BitRate . "<br>
-        Stream Url: <a href=\"" . $WebServer . "/data/video/" . rawurlencode($db_field['filename']) ."\">" . $WebServer . "/data/video/" . rawurlencode($db_field['filename']) ."</a><br>
+        Stream Url: <a href=\"" . $WebServer . "/data/video/" . implode("/", array_map("rawurlencode", explode("/", $db_field['filename']))) ."\">" . $WebServer . "/data/video/" . implode("/", array_map("rawurlencode", explode("/", $db_field['filename']))) ."</a><br>
         Synopsis: " . htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['plot'] )) . "<br>
         Genre: " . $genre['genre'] . "<br>
         Runtime: " .$db_field['length'] . " min<br>
