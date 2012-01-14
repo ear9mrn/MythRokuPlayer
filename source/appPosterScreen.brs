@@ -40,7 +40,8 @@ Function showPosterScreen(screen As Object, category As Object) As Integer
     m.curShow     = 0
 
     screen.SetListNames(getCategoryList(category)) 'comment out to not show categories
-    screen.SetContentList(getShowsForCategoryItem(category, m.curCategory))
+    itemlist = getShowsForCategoryItem(category.kids[m.curCategory])
+    screen.SetContentList(itemlist)
     screen.Show()
 
     while true
@@ -51,12 +52,12 @@ Function showPosterScreen(screen As Object, category As Object) As Integer
                 m.curCategory = msg.GetIndex()
                 m.curShow = 0
                 screen.SetFocusedListItem(m.curShow)
-                screen.SetContentList(getShowsForCategoryItem(category, m.curCategory))
+                screen.SetContentList(getShowsForCategoryItem(category.kids[m.curCategory]))
                 print "list focused | current category = "; m.curCategory
             else if msg.isListItemSelected() then
                 m.curShow = msg.GetIndex()
                 print "list item selected | current show = "; m.curShow
-                m.curShow = displayShowDetailScreen(category, m.curShow)
+                m.curShow = displayShowDetailScreen(category, itemlist, m.curShow)
                 screen.SetFocusedListItem(m.curShow)
                 print "list item updated  | new show = "; m.curShow
             else if msg.isScreenClosed() then
@@ -74,15 +75,14 @@ End Function
 '** data for the selected show.  This data should be 
 '** sufficient for the show detail (springboard) to display
 '**********************************************************
-Function displayShowDetailScreen(category as Object, showIndex as Integer) As Integer
+Function displayShowDetailScreen(category as Object, itemlist as Object, itemIndex as Integer) As Integer
 
     if validateParam(category, "roAssociativeArray", "displayShowDetailScreen") = false return -1
 
-    shows = getShowsForCategoryItem(category, m.curCategory)
     screen = preShowDetailScreen(category.Title, category.kids[m.curCategory].Title)
-    showIndex = showDetailScreen(screen, shows, showIndex)
+    itemIndex = showDetailScreen(screen, itemlist, itemIndex)
 
-    return showIndex
+    return itemIndex
 End Function
 
 
@@ -115,11 +115,9 @@ End Function
 '** displayed should be refreshed to corrrespond to the highlighted
 '** item.  This function returns the list of shows for that category
 '********************************************************************
-Function getShowsForCategoryItem(category As Object, item As Integer) As Object
+Function getShowsForCategoryItem(item As Object) As Object
 
-    if validateParam(category, "roAssociativeArray", "getCategoryList") = false return invalid 
-
-    conn = InitShowFeedConnection(category.kids[item])
+    conn = InitShowFeedConnection(item)
     showList = conn.LoadShowFeed(conn)
     return showList
 
