@@ -1,6 +1,6 @@
 <?php
 
-//get the local info from the settings file
+// Get the local info from the settings file
 require_once './settings.php';
 
 // Put any command line arguments in $_GET
@@ -9,32 +9,35 @@ if ( $argv[1] )
     parse_str($argv[1], $_GET);
 }
 
-//make a connection to the mysql sever
+// Make a connection to the mySQL server
 $db_handle = mysql_connect($MysqlServer, $MythTVdbuser, $MythTVdbpass);
-$db_found = mysql_select_db($MythTVdb, $db_handle);
+$db_found  = mysql_select_db($MythTVdb, $db_handle);
 
-//set the stream id to some abitary number 
-$counter = 1000;
-
-//define quiery for sorting the records, only get files that are .mp4
 if ( $db_found )
 {
-	if (isset($_GET['sort']) && $_GET['sort'] == 'year') {
-		$SQL = "SELECT * FROM videometadata WHERE filename LIKE '%.mp4' ORDER BY year DESC ";
-	}elseif (isset($_GET['sort']) && $_GET['sort'] == 'title'){
-		$SQL = "SELECT * FROM videometadata WHERE filename LIKE '%.mp4' ORDER BY title ASC ";
-	}elseif (isset($_GET['sort']) && $_GET['sort'] == 'genre'){
-		$SQL = "SELECT * FROM videometadata WHERE filename LIKE '%.mp4' ORDER BY category ASC";
-	}
-	else {
-		$SQL = "SELECT * FROM videometadata WHERE filename LIKE '%.mp4' ";
-	}
+    // Start building SQL query
+    $SQL = "SELECT * FROM videometadata";
 
-    //grab the data
-    $result = mysql_query($SQL);
+    // Filter file extentions
+    $SQL .= " WHERE filename LIKE '%.mp4'";
+    $exts = array('mov', 'm4v'); reset($exts);
+    foreach ( $exts as $ext ) { $SQL .= " OR filename LIKE '%.$ext'"; }
+
+    // Add sorting
+    if ( isset($_GET['sort']) )
+    {
+	$sort = $_GET['sort'];
+
+	if     ($sort == 'year' ) { $SQL .= " ORDER BY year DESC";    }
+	elseif ($sort == 'title') { $SQL .= " ORDER BY title ASC";    }
+	elseif ($sort == 'genre') { $SQL .= " ORDER BY category ASC"; }
+    }
+
+    // Grab the SQL data
+    $result   = mysql_query($SQL);
     $num_rows = mysql_num_rows($result);
 
-    // print the xml header
+    // Print the XML header
     print <<<EOF
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 
@@ -46,10 +49,15 @@ if ( $db_found )
 
 EOF;
 
-    //print out all the records in xml format for roku to read 
+    // Set the stream ID to some abitary number 
+    $counter = 1000;
+
+    // Print out all the records in XML format for the Roku to read 
     while ( $db_field = mysql_fetch_assoc($result) )
     {
 	$counter++;
+
+	$ext  = pathinfo($db_field['filename'], PATHINFO_EXTENSION);
 
 	$genrenum = mysql_fetch_assoc(mysql_query("SELECT idgenre FROM videometadatagenre where idvideo='" . $db_field['intid'] . "' "));
 	if ($genrenum['idgenre'] == 0) { $genrenum['idgenre'] = 22; }
@@ -74,12 +82,12 @@ EOF;
 	<contentType>Movies</contentType>
 	<contentQuality>$RokuDisplayType</contentQuality>
 	<media>
-	    <streamFormat>mp4</streamFormat>
+	    <streamFormat>$ext</streamFormat>
 	    <streamQuality>$RokuDisplayType</streamQuality>
 	    <streamBitrate>$BitRate</streamBitrate>
 	    <streamUrl>$mythtvdata/video/$filename</streamUrl>
 	</media>
-	<synopsis>$synopsis</synopsis>	
+	<synopsis>$synopsis</synopsis>
 	<genres>$genre</genres>
 	<runtime>$runtime</runtime>
 	<date>$year</date>
@@ -96,14 +104,12 @@ EOF;
 EOF;
 
 }
-//throw error if can not connect to database.
-else
+else // Throw error if can not connect to database.
 {
     print "Database NOT Found";
 }
 
-//close mysql pointer
+// Close mySQL pointer
 mysql_close($db_handle);
 
 ?>
-
