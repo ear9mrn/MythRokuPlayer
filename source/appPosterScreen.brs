@@ -20,7 +20,7 @@ Function preShowPosterScreen(breadA=invalid, breadB=invalid) As Object
         screen.SetBreadcrumbText(breadA, breadB)
     end if
 
-    screen.SetListStyle("arced-landscape")
+    screen.SetListStyle("arced-portrait")
     return screen
 
 End Function
@@ -41,6 +41,9 @@ Function showPosterScreen(screen As Object, category As Object) As Integer
 
     screen.SetListNames(getCategoryList(category)) 'comment out to not show categories
     itemlist = getShowsForCategoryItem(category.kids[m.curCategory])
+    if itemlist[0].Recording
+	screen.SetListStyle("arced-landscape")
+    endif
     screen.SetContentList(itemlist)
     screen.Show()
 

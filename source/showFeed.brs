@@ -52,17 +52,38 @@ End Function
 Function init_show_feed_item() As Object
     o = CreateObject("roAssociativeArray")
 
-    o.ContentId        = ""
-    o.Title            = ""
-    o.ContentType      = ""
-    o.ContentQuality   = ""
-    o.Synopsis         = ""
-    o.Genre            = ""
-    o.Runtime          = ""
-    o.Date             = ""
-    o.StreamQualities  = CreateObject("roArray", 5, true) 
-    o.StreamBitrates   = CreateObject("roArray", 5, true)
-    o.StreamUrls       = CreateObject("roArray", 5, true)
+    o.ContentType = ""
+    o.Title	  = ""
+    o.TitleSeason = ""
+    o.Description = ""
+    o.HDPosterUrl = ""
+    o.SDPosterUrl = ""
+
+    o.StreamBitrates	= CreateObject("roArray", 1, true)
+    o.StreamUrls	= CreateObject("roArray", 1, true)
+    o.StreamQualities	= CreateObject("roArray", 1, true)
+    o.StreamContentIDs	= CreateObject("roArray", 1, true)
+    o.StreamFormat	= CreateObject("roArray", 1, true)
+
+    o.Length		= 0
+    o.BookmarkPosition	= 0
+    o.ReleaseDate	= ""
+    o.Rating		= ""
+    o.StarRating	= 0
+
+    o.ShortDescriptionLine1 = ""
+    o.ShortDescriptionLine2 = ""
+
+    o.EpisodeNumber = ""
+    o.Actors	    = ""
+    o.Director	    = ""
+    o.Categories    = ""
+    o.IsHD	    = false
+    o.HDBranded	    = false
+
+    o.ContentId	    = ""
+    o.DelCommand    = ""
+    o.Recording	    = false
 
     return o
 End Function
@@ -127,59 +148,52 @@ Function parse_show_feed(xml As Object, feed As Object) As Void
 
         item = init_show_feed_item()
 
-        'fetch all values from the xml for the current show
-        item.hdImg            = validstr(curShow@hdImg) 
-        item.sdImg            = validstr(curShow@sdImg) 
-        item.ContentId        = validstr(curShow.contentId.GetText()) 
-        item.Title            = validstr(curShow.title.GetText()) 
-        item.Description      = validstr(curShow.description.GetText()) 
-        item.ContentType      = validstr(curShow.contentType.GetText())
-        item.ContentQuality   = validstr(curShow.contentQuality.GetText())
-        item.Synopsis         = validstr(curShow.synopsis.GetText())
-        item.Genre            = validstr(curShow.genres.GetText())
-	item.SubTitle         = validstr(curShow.subtitle.GetText())
-        item.Runtime          = validstr(curShow.runtime.GetText())
-	item.Date             = validstr(curShow.date.GetText())
-	item.DelCommand       = validstr(curShow.delcommand.GetText())
-	item.TVorMovie        = validstr(curShow.tvormov.GetText())
-	item.StarRating	      = validstr(curShow.starrating.GetText())	
-        item.HDBifUrl         = validstr(curShow.hdBifUrl.GetText())
-        item.SDBifUrl         = validstr(curShow.sdBifUrl.GetText())
-        item.StreamFormat = validstr(curShow.streamFormat.GetText())
-        if item.StreamFormat = "" then  'set default streamFormat to mp4 if doesn't exist in xml
-            item.StreamFormat = "mp4"
-        endif
-        
-        'map xml attributes into screen specific variables
-        item.ShortDescriptionLine1 = item.Title 
-        item.ShortDescriptionLine2 = item.subtitle + " " + item.Date
-        item.HDPosterUrl           = item.hdImg
-        item.SDPosterUrl           = item.sdImg
+	' Other attributes
+	item.ContentId	= validstr(curShow.index.GetText())
+	item.DelCommand	= validstr(curShow.delcommand.GetText())
+	if curShow.recording.GetText() = "true"
+	    item.Recording = true
+	endif
 
-        item.Length = strtoi(item.Runtime)
-        item.Categories = CreateObject("roArray", 5, true)
-        item.Categories.Push(item.Genre)
-        item.Actors = CreateObject("roArray", 5, true)
-        item.Actors.Push(item.Genre) 
-        item.Description = item.Date + ". " + item.Synopsis
-        
-        'Set Default screen values for items not in feed
-        item.HDBranded = false
-        item.IsHD = true
-        'item.StarRating = "50"
-        item.ContentType = "episode" 
- 	item.StreamBitrates = [0]	
-	
-        'media may be at multiple bitrates, so parse an build arrays
-        for idx = 0 to 4
-            e = curShow.media[idx]
-            if e  <> invalid then
-                'item.StreamBitrates.Push(strtoi(validstr(e.streamBitrate.GetText())))
-                item.StreamQualities.Push(validstr(e.streamQuality.GetText()))
-                item.StreamUrls.Push(validstr(e.streamUrl.GetText()))
-            endif
-        next idx
-        
+	' Roku specific attributes
+        item.ContentType = validstr(curShow.contentType.GetText())
+	item.Title	 = validstr(curShow.title.GetText())
+	item.Description = validstr(curShow.synopsis.GetText())
+	item.HDPosterUrl = validstr(curShow.hdImg.GetText())
+	item.SDPosterUrl = validstr(curShow.sdImg.GetText())
+
+        e = curShow.media[0]
+	item.StreamBitrates.Push(  strtoi(  e.streamBitrate.GetText()))
+	item.StreamUrls.Push(	   validstr(e.streamUrl.GetText()))
+	item.StreamQualities.Push( validstr(e.streamQuality.GetText()))
+	item.StreamContentIDs.Push(validstr(e.streamContentId.GetText()))
+	item.StreamFormat.Push(	   validstr(e.streamFormat.GetText()))
+
+	item.Length		= strtoi(  curShow.runtime.GetText())
+'	item.BookmarkPosition	= strtoi(  curShow..GetText())
+	item.ReleaseDate	= validstr(curShow.date.GetText())
+	item.Rating		= validstr(curShow.rating.GetText())
+	item.StarRating		= strtoi(  curShow.starrating.GetText())
+
+	item.Actors	    = validstr(curShow.subtitle.GetText())
+'	item.Director	    = 
+	item.Categories	    = validstr(curShow.genres.GetText())
+	if curShow.isHD.GetText() = "true"
+	    item.IsHD = true
+	endif
+
+	if item.ContentType = "episode"
+	    item.EpisodeNumber = validstr(curShow.episode.GetText())
+	    item.ShortDescriptionLine1 = item.Title + " - " + item.Actors
+	    if item.Recording
+		item.ShortDescriptionLine2 = "Episode: " + item.EpisodeNumber + " Recorded: " + item.ReleaseDate
+	    endif
+	    item.Actors = "[" + item.EpisodeNumber + "] " + item.Actors
+	else ' movie
+	    item.ShortDescriptionLine1 = item.Title
+	    item.ShortDescriptionLine2 = item.Actors
+	endif
+
         showCount = showCount + 1
         feed.Push(item)
 

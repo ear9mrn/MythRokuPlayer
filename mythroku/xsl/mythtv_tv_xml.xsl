@@ -20,41 +20,38 @@
 
     <xsl:template match="feed">
 	<xsl:for-each select="item">
-	    <b><xsl:value-of select="title" /> (#<xsl:value-of select="contentId" />)</b><br />
-	    <b><xsl:value-of select="subtitle" /></b><br />
-
 	    <xsl:variable name="url"    select="media/streamUrl" />
 	    <xsl:variable name="delcmd" select="delcommand" />
-	    
-	    <table border="0">
+
+	    <b><xsl:text>[</xsl:text>
+	    <xsl:value-of select="index" /><xsl:text> of </xsl:text>
+	    <xsl:value-of select="../resultLength" /><xsl:text>] </xsl:text>
+	    <xsl:value-of select="title" /><xsl:text> </xsl:text></b>
+	    <i><xsl:value-of select="subtitle" /></i><br/>
+
+	    <table border="1">
 		<tr>
-		    <td rowspan="9">
-			<xsl:variable name="sdimg" select="@sdImg" />
-			<a href="{$url}">
-			    <img src="{$sdimg}" width="300" height="168" />
-			</a>
+		    <td rowspan="5">
+			<xsl:variable name="img" select="hdImg" />
+			<a href="{$url}"><img src="{$img}" width="300" height="168" /></a>
 		    </td>
-		    <td>
-			<tr>
-			    <td><b>Type:</b></td> <td><xsl:value-of select="contentType" /></td>
-			    <td><b>Quality:</b></td> <td><xsl:value-of select="contentQuality" /></td>
-			    <td><b>Format:</b></td> <td><xsl:value-of select="media/streamFormat" /></td>
-			    <td><b>Bitrate:</b></td> <td><xsl:value-of select="media/streamBitrate" /></td>
-			</tr>
-			<tr>
-			    <td><b>Genre:</b></td> <td> <xsl:value-of select="genres" /></td>
-			    <td><b>Runtime:</b></td> <td> <xsl:value-of select="runtime" /> min</td>
-			    <td><b>Recorded:</b></td> <td> <xsl:value-of select="date" /></td>
-			    <td> </td> <td> </td>
-			</tr>
-			<tr><td colspan="8"><b>Delete Command:</b></td></tr>
-			<tr><td colspan="8"><a href="{$delcmd}"><xsl:copy-of select="$delcmd" /></a></td></tr>
-			<tr><td colspan="8"><b>Stream Url:</b></td></tr>
-			<tr><td colspan="8"><a href="{$url}"><xsl:copy-of select="$url" /></a></td></tr>
-			<tr><td colspan="8"><b>Synopsis:</b></td></tr>
-			<tr><td colspan="8"><xsl:value-of select="synopsis" /></td></tr>
-		    </td>
+		    <td><b>Type:</b></td><td><xsl:value-of select="contentType" /></td>
+		    <td><b>Genre:</b></td><td><xsl:value-of select="genres" /></td>
+		    <td><b>Quality:</b></td><td><xsl:value-of select="media/streamQuality" /></td>
+		    <td><b>Rating:</b></td><td><xsl:value-of select="rating" /></td>
 		</tr>
+		<tr>
+		    <td><b>Runtime:</b></td><td><xsl:value-of select="runtime div 60" /> min</td>
+		    <td><b>Date:</b></td><td><xsl:value-of select="date" /></td>
+		    <td><b>Format:</b></td><td><xsl:value-of select="media/streamFormat" /></td>
+		    <td><b>Star Rating:</b></td><td><xsl:value-of select="starrating" /></td>
+		</tr>
+		<tr>
+		    <td><b>Episode:</b></td><td><xsl:value-of select="episode" /></td>
+		</tr>
+		<tr><td colspan="8"><b>Stream Url:</b><br/><a href="{$url}"><xsl:copy-of select="$url" /></a></td></tr>
+		<tr><td colspan="8"><b>Synopsis:</b><br/><xsl:value-of select="synopsis" /></td></tr>
+		<tr><td colspan="9"><b>Delete Command:</b><br/><a href="{$delcmd}"><xsl:copy-of select="$delcmd" /></a></td></tr>
 	    </table>
 
 	    <br /> 

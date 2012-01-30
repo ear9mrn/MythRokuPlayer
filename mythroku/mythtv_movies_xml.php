@@ -28,9 +28,9 @@ if ( $db_found )
     {
 	$sort = $_GET['sort'];
 
-	if     ($sort == 'year' ) { $SQL .= " ORDER BY year DESC";    }
-	elseif ($sort == 'title') { $SQL .= " ORDER BY title ASC";    }
-	elseif ($sort == 'genre') { $SQL .= " ORDER BY category ASC"; }
+	if     ($sort == 'title') { $SQL .= " ORDER BY title ASC";       }
+	elseif ($sort == 'date' ) { $SQL .= " ORDER BY releasedate ASC"; }
+	elseif ($sort == 'genre') { $SQL .= " ORDER BY category ASC";    }
     }
 
     // Grab the SQL data
@@ -49,50 +49,71 @@ if ( $db_found )
 
 EOF;
 
-    // Set the stream ID to some abitary number 
-    $counter = 1000;
+    $counter = 0;
 
     // Print out all the records in XML format for the Roku to read 
     while ( $db_field = mysql_fetch_assoc($result) )
     {
 	$counter++;
 
-	$ext  = pathinfo($db_field['filename'], PATHINFO_EXTENSION);
+	$filename  = $db_field['filename'];
+
+	$contentType = "movie";
+	if ( 0 < $db_field['season'] )
+	{
+	    $contentType = "episode";
+	    $episode	 = $db_field['season'] . "-" . $db_field['episode'];
+	}
+
+	$title	    = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['title'] ));
+	$subtitle   = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['subtitle'] ));
+	$synopsis   = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['plot'] ));
+
+	$hdimg	= implode("/", array_map("rawurlencode", explode("/", $db_field['coverfile'])));
+	$sdimg	= $hdimg;
+
+	$isHD = 'false';
+	$quality = 'SD';
+
+	$bitRate    = 0;
+	$url	    = "$mythtvdata/video/" . implode("/", array_map("rawurlencode", explode("/", $filename)));
+	$contentId  = $filename;
+	$format	    = pathinfo($filename, PATHINFO_EXTENSION);
 
 	$genrenum = mysql_fetch_assoc(mysql_query("SELECT idgenre FROM videometadatagenre where idvideo='" . $db_field['intid'] . "' "));
 	if ($genrenum['idgenre'] == 0) { $genrenum['idgenre'] = 22; }
-	$genre = mysql_fetch_assoc(mysql_query("SELECT genre FROM videogenre where intid='" . $genrenum['idgenre'] . "' "));
+	$genres = mysql_fetch_assoc(mysql_query("SELECT genre FROM videogenre where intid='" . $genrenum['idgenre'] . "' "));
+	$genre = $genres['genre'];
 
-	$filename   = implode("/", array_map("rawurlencode", explode("/", $db_field['filename'])));
-	$hdimg	    = implode("/", array_map("rawurlencode", explode("/", $db_field['coverfile'])));
-	$sdimg	    = $hdimg;
-
-	$title	    = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['title'] ));
-	$synopsis   = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['plot'] ));
-
-	$genre	    = $genre['genre'];
-	$runtime    = $db_field['length'];
-	$year	    = $db_field['year'];
+	$runtime    = $db_field['length'] * 60;
+	$date	    = date("m/d/Y", convert_datetime($db_field['releasedate']));
 	$starrating = $db_field['userrating'] * 10;
+	$rating	    = $db_field['rating'];
 
 	print <<<EOF
-    <item sdImg="$MythRokuDir/image.php?image=$sdimg" hdImg="$MythRokuDir/image.php?image=$hdimg">
+    <item>
+	<contentType>$contentType</contentType>
 	<title>$title</title>
-	<contentId>$counter</contentId>
-	<contentType>Movies</contentType>
-	<contentQuality>$RokuDisplayType</contentQuality>
-	<media>
-	    <streamFormat>$ext</streamFormat>
-	    <streamQuality>$RokuDisplayType</streamQuality>
-	    <streamBitrate>$BitRate</streamBitrate>
-	    <streamUrl>$mythtvdata/video/$filename</streamUrl>
-	</media>
+	<subtitle>$subtitle</subtitle>
 	<synopsis>$synopsis</synopsis>
+	<hdImg>$MythRokuDir/image.php?image=$hdimg</hdImg>
+	<sdImg>$MythRokuDir/image.php?image=$sdimg</sdImg>
+	<media>
+	    <streamBitrate>$bitRate</streamBitrate>
+	    <streamUrl>$url</streamUrl>
+	    <streamQuality>$quality</streamQuality>
+	    <streamContentId>$contentId</streamContentId>
+	    <streamFormat>$format</streamFormat>
+	</media>
+	<isHD>$isHD</isHD>
+	<episode>$episode</episode>
 	<genres>$genre</genres>
 	<runtime>$runtime</runtime>
-	<date>$year</date>
-	<tvormov>movie</tvormov>
+	<date>$date</date>
 	<starrating>$starrating</starrating>
+	<rating>$rating</rating>
+	<index>$counter</index>
+	<recording>false</recording>
     </item>
 
 EOF;
@@ -111,5 +132,15 @@ else // Throw error if can not connect to database.
 
 // Close mySQL pointer
 mysql_close($db_handle);
+
+// Convert mySQL timestamp to Unix time
+function convert_datetime($str) 
+{
+    list($year, $month, $day) = explode('-', $str);
+
+    $timestamp = mktime(0, 0, 0, $month, $day, $year);
+
+    return $timestamp;
+}
 
 ?>

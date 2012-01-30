@@ -7,7 +7,7 @@
 Function preShowDetailScreen(breadA=invalid, breadB=invalid) As Object
     port=CreateObject("roMessagePort")
     screen = CreateObject("roSpringboardScreen")
-    screen.SetDescriptionStyle("video") 
+    screen.SetDescriptionStyle("movie") 
     screen.SetMessagePort(port)
     if breadA<>invalid and breadB<>invalid then
         screen.SetBreadcrumbText(breadA, breadB)
@@ -123,7 +123,7 @@ Function refreshShowDetail(screen As Object, showList As Object, showIndex as In
     screen.AddButton(1, "Resume Playing")    
     screen.AddButton(2, "Play from Beginning")  
   
-    if show["tvormovie"] = "tv"
+    if show["recording"]
 	 screen.AddButton(7, "Delete")   
     endif
 
