@@ -3,13 +3,13 @@
     $arg = "";
     foreach( $_GET as $key => $value )
     {
-	$arg .= "$key=$value&";
+        $arg .= "$key=$value&";
     }
     if ( $arg !== "" ) { $arg .= '&'; }
-    $arg .= "test=mythtv_tv_test.php";
+    $arg .= "script=mythtv_tv_test.php";
 
     $xml_string = `php $cmd "$arg"`;
-    $stylesheet = "xsl/mythtv_tv_xml.xsl";
+    $stylesheet = "xsl/mythtv_xml_test.xsl";
 
     $xml = new DomDocument('1.0');
     $xml->loadXML($xml_string);

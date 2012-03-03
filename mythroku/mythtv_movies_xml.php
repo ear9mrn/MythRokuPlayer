@@ -3,11 +3,19 @@
 // Get the local info from the settings file
 require_once './settings.php';
 
+include 'xml_utils.php';
+
 // Put any command line arguments in $_GET
 if ( $argv[1] )
 {
     parse_str($argv[1], $_GET);
 }
+
+$start_row = 0;
+if ( isset($_GET['index']) ) { $start_row = $_GET['index']; }
+
+$script = "mythtv_movies_xml.php";
+if ( isset($_GET['script']) ) { $script = $_GET['script']; }
 
 // Make a connection to the mySQL server
 $db_handle = mysql_connect($MysqlServer, $MythTVdbuser, $MythTVdbpass);
@@ -20,109 +28,116 @@ if ( $db_found )
 
     // Filter file extentions
     $SQL .= " WHERE filename LIKE '%.mp4'";
-    $exts = array('mov', 'm4v'); reset($exts);
-    foreach ( $exts as $ext ) { $SQL .= " OR filename LIKE '%.$ext'"; }
+    $SQL .=    " OR filename LIKE '%.m4v'";
+    $SQL .=    " OR filename LIKE '%.mov'";
 
     // Add sorting
     if ( isset($_GET['sort']) )
     {
-	$sort = $_GET['sort'];
-
-	if     ($sort == 'title') { $SQL .= " ORDER BY title ASC";       }
-	elseif ($sort == 'date' ) { $SQL .= " ORDER BY releasedate ASC"; }
-	elseif ($sort == 'genre') { $SQL .= " ORDER BY category ASC";    }
+        switch ( $_GET['sort'] )
+        {
+            case 'title': $SQL .= " ORDER BY title ASC";              break;
+            case 'date':  $SQL .= " ORDER BY releasedate, title ASC"; break;
+            case 'genre': $SQL .= " ORDER BY category, title ASC";    break;
+        }
     }
 
-    // Grab the SQL data
-    $result   = mysql_query($SQL);
-    $num_rows = mysql_num_rows($result);
+    // Get the full result count
+    $result     = mysql_query($SQL);
+    $total_rows = mysql_num_rows($result);
+
+    // Limit the number results
+    if ( 0 !== $ResultLimit )
+    {
+        $SQL .= " LIMIT $start_row, $ResultLimit";
+
+        // Get the subset results
+        $result = mysql_query($SQL);
+    }
+
+    // Get the subset result count
+    $result_rows = mysql_num_rows($result);
 
     // Print the XML header
-    print <<<EOF
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    $args = array( 'start_row'   => $start_row,
+                   'result_rows' => $result_rows,
+                   'total_rows'  => $total_rows,
+                   'list_type'   => 'video' );
+    xml_start_feed( $args );
 
-<feed>
-    <!-- resultLength indicates the total number of results for this feed -->
-    <resultLength>$num_rows</resultLength>
-    <!-- endIndix  indicates the number of results for this *paged* section of the feed -->
-    <endIndex>$num_rows</endIndex>
+    $args = array( 'script'     => $script,
+                   'start_row'  => $start_row,
+                   'html_parms' => $_GET );
+    xml_start_dir( $args );
 
-EOF;
+    $counter = $start_row;
 
-    $counter = 0;
-
-    // Print out all the records in XML format for the Roku to read 
+    // Print out all the records in XML format for the Roku to read
     while ( $db_field = mysql_fetch_assoc($result) )
     {
-	$counter++;
+        $filename  = $db_field['filename'];
 
-	$filename  = $db_field['filename'];
+        $contentType = "movie";
+        if ( 0 < $db_field['season'] )
+        {
+            $contentType = "episode";
+            $episode     = $db_field['season'] . "-" . $db_field['episode'];
+        }
 
-	$contentType = "movie";
-	if ( 0 < $db_field['season'] )
-	{
-	    $contentType = "episode";
-	    $episode	 = $db_field['season'] . "-" . $db_field['episode'];
-	}
+        $title      = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['title'] ));
+        $subtitle   = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['subtitle'] ));
+        $synopsis   = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['plot'] ));
 
-	$title	    = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['title'] ));
-	$subtitle   = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['subtitle'] ));
-	$synopsis   = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['plot'] ));
+        $hdimg  = implode("/", array_map("rawurlencode", explode("/", $db_field['coverfile'])));
+        $sdimg  = $hdimg;
 
-	$hdimg	= implode("/", array_map("rawurlencode", explode("/", $db_field['coverfile'])));
-	$sdimg	= $hdimg;
+        $quality = $RokuDisplayType;
+        $isHD    = 'false';
+        if ( 'HD' == $quality ) { $isHD = 'true'; }
 
-	$isHD = 'false';
-	$quality = 'SD';
+        $url = "$mythtvdata/video/" . implode("/", array_map("rawurlencode", explode("/", $filename)));
 
-	$bitRate    = 0;
-	$url	    = "$mythtvdata/video/" . implode("/", array_map("rawurlencode", explode("/", $filename)));
-	$contentId  = $filename;
-	$format	    = pathinfo($filename, PATHINFO_EXTENSION);
+        $genrenum = mysql_fetch_assoc(mysql_query("SELECT idgenre FROM videometadatagenre where idvideo='" . $db_field['intid'] . "' "));
+        if ($genrenum['idgenre'] == 0) { $genrenum['idgenre'] = 22; }
+        $genres = mysql_fetch_assoc(mysql_query("SELECT genre FROM videogenre where intid='" . $genrenum['idgenre'] . "' "));
+        $genre = $genres['genre'];
 
-	$genrenum = mysql_fetch_assoc(mysql_query("SELECT idgenre FROM videometadatagenre where idvideo='" . $db_field['intid'] . "' "));
-	if ($genrenum['idgenre'] == 0) { $genrenum['idgenre'] = 22; }
-	$genres = mysql_fetch_assoc(mysql_query("SELECT genre FROM videogenre where intid='" . $genrenum['idgenre'] . "' "));
-	$genre = $genres['genre'];
+        $args = array(
+                'contentType' => $contentType,
+                'title'       => $title,
+                'subtitle'    => $subtitle,
+                'synopsis'    => $synopsis,
+                'hdImg'       => "$MythRokuDir/image.php?image=$hdimg",
+                'sdImg'       => "$MythRokuDir/image.php?image=$sdimg",
+                'streamBitrate'   => 0,
+                'streamUrl'       => $url,
+                'streamQuality'   => $quality,
+                'streamContentId' => $filename,
+                'streamFormat'    => pathinfo($filename, PATHINFO_EXTENSION),
+                'isHD'        => $isHD,
+                'episode'     => $episode,
+                'genres'      => $genre,
+                'runtime'     => $db_field['length'] * 60,
+                'date'        => date("m/d/Y", convert_datetime($db_field['releasedate'])),
+                'starRating'  => $db_field['userrating'] * 10,
+                'rating'      => $db_field['rating'],
+                'index'       => $counter,
+                'isRecording' => 'false',
+                'delCmd'      => '' );
 
-	$runtime    = $db_field['length'] * 60;
-	$date	    = date("m/d/Y", convert_datetime($db_field['releasedate']));
-	$starrating = $db_field['userrating'] * 10;
-	$rating	    = $db_field['rating'];
+        xml_file( $args );
 
-	print <<<EOF
-    <item>
-	<contentType>$contentType</contentType>
-	<title>$title</title>
-	<subtitle>$subtitle</subtitle>
-	<synopsis>$synopsis</synopsis>
-	<hdImg>$MythRokuDir/image.php?image=$hdimg</hdImg>
-	<sdImg>$MythRokuDir/image.php?image=$sdimg</sdImg>
-	<media>
-	    <streamBitrate>$bitRate</streamBitrate>
-	    <streamUrl>$url</streamUrl>
-	    <streamQuality>$quality</streamQuality>
-	    <streamContentId>$contentId</streamContentId>
-	    <streamFormat>$format</streamFormat>
-	</media>
-	<isHD>$isHD</isHD>
-	<episode>$episode</episode>
-	<genres>$genre</genres>
-	<runtime>$runtime</runtime>
-	<date>$date</date>
-	<starrating>$starrating</starrating>
-	<rating>$rating</rating>
-	<index>$counter</index>
-	<recording>false</recording>
-    </item>
-
-EOF;
-
+        $counter++;
     }
 
-    print <<<EOF
-</feed>
-EOF;
+    $args = array( 'script'      => $script,
+                   'start_row'   => $start_row,
+                   'result_rows' => $result_rows,
+                   'total_rows'  => $total_rows,
+                   'html_parms'  => $_GET );
+    xml_end_dir( $args );
+
+    xml_end_feed();
 
 }
 else // Throw error if can not connect to database.
@@ -134,7 +149,7 @@ else // Throw error if can not connect to database.
 mysql_close($db_handle);
 
 // Convert mySQL timestamp to Unix time
-function convert_datetime($str) 
+function convert_datetime($str)
 {
     list($year, $month, $day) = explode('-', $str);
 
