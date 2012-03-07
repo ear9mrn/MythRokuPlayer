@@ -12,7 +12,7 @@ function initCategoryFeedConnection() as object
 
     conn = CreateObject("roAssociativeArray")
 
-    conn.UrlPrefix = RegRead("ServerURL")
+    conn.UrlPrefix = RegRead("MythRokuServerURL")
     conn.UrlCategoryFeed = conn.UrlPrefix + "/mythtv.php"
 
     conn.Timer = CreateObject("roTimespan")

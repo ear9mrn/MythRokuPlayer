@@ -135,6 +135,7 @@ function xml_end_dir( $args )
                                 : "Indexes $startIndex - $endIndex";
 
         $args['html_parms']['index'] = $startIndex;
+        $html_parms = "";
         foreach( $args['html_parms'] as $key => $value )
         {
             $html_parms .= "$key=$value&";

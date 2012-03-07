@@ -6,7 +6,8 @@ require_once './settings.php';
 include 'xml_utils.php';
 
 // Put any command line arguments in $_GET
-if ( $argv[1] )
+$size = count($argv);
+if ( ($size >= 2) && $argv[1] )
 {
     parse_str($argv[1], $_GET);
 }
@@ -85,6 +86,7 @@ if ( $db_found )
         $tmp_db_field = mysql_fetch_assoc($tmp_result);
 
         $contentType = "movie";
+        $episode     = "";
         if ( 'series' == $tmp_db_field['category_type'] )
         {
             $contentType = "episode";
