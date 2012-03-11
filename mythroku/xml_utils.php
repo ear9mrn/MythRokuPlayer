@@ -2,7 +2,7 @@
 
 function xml_start_feed( $args )
 {
-    print <<<EOF
+    return <<<EOF
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 
 <feed listType="{$args['list_type']}"
@@ -17,7 +17,7 @@ EOF;
 
 function xml_end_feed()
 {
-    print <<<EOF
+    return <<<EOF
 </feed>
 
 EOF;
@@ -26,7 +26,7 @@ EOF;
 
 function xml_file( $args )
 {
-    print <<<EOF
+    return <<<EOF
     <item>
         <itemType>file</itemType>
         <contentType>{$args['contentType']}</contentType>
@@ -61,7 +61,7 @@ EOF;
 
 function xml_dir( $args )
 {
-    print <<<EOF
+    return <<<EOF
     <item>
         <itemType>dir</itemType>
         <title>{$args['title']}</title>
@@ -77,6 +77,8 @@ EOF;
 
 function xml_start_dir( $args )
 {
+    $xml_output = '';
+
     require 'settings.php';
 
     if ( 0 < $args['start_row'] )
@@ -86,6 +88,7 @@ function xml_start_dir( $args )
         {
             $startIndex = 0;
         }
+        $args['html_parms']['index'] = $startIndex;
 
         $endIndex = $startIndex + $ResultLimit - 1;
         if ( $endIndex >= $args['start_row'] )
@@ -97,23 +100,27 @@ function xml_start_dir( $args )
                             ? "Index $startIndex"
                             : "Indexes $startIndex - $endIndex";
 
-        $args['html_parms']['index'] = $startIndex;
-        foreach( $args['html_parms'] as $key => $value )
-        {
-            $html_parms .= "$key=$value&";
-        }
+        $script = ( isset($args['html_parms']['test']) )
+                            ? 'mythtv_test.php'
+                            : 'mythtv_xml.php';
+
+        $parms = http_build_query($args['html_parms']);
 
         $args = array(
                 'title' => $title,
                 'hdImg' => "$MythRokuDir/images/Mythtv_movie.png",
                 'sdImg' => "$MythRokuDir/images/Mythtv_movie.png",
-                'feed'  => htmlspecialchars("$MythRokuDir/{$args['script']}?$html_parms") );
-        xml_dir( $args );
+                'feed'  => htmlspecialchars("$MythRokuDir/$script?$parms") );
+        $xml_output = xml_dir( $args );
     }
+
+    return $xml_output;
 }
 
 function xml_end_dir( $args )
 {
+    $xml_output = '';
+
     require 'settings.php';
 
     if ( $args['total_rows'] > $args['start_row'] + $args['result_rows'] )
@@ -123,6 +130,7 @@ function xml_end_dir( $args )
         {
             $startIndex = $args['total_rows'];
         }
+        $args['html_parms']['index'] = $startIndex;
 
         $endIndex = $startIndex + $ResultLimit - 1;
         if ( $endIndex >= $args['total_rows'] )
@@ -134,20 +142,21 @@ function xml_end_dir( $args )
                                 ? "Index $startIndex"
                                 : "Indexes $startIndex - $endIndex";
 
-        $args['html_parms']['index'] = $startIndex;
-        $html_parms = "";
-        foreach( $args['html_parms'] as $key => $value )
-        {
-            $html_parms .= "$key=$value&";
-        }
+        $script = ( isset($args['html_parms']['test']) )
+                            ? 'mythtv_test.php'
+                            : 'mythtv_xml.php';
+
+        $parms = http_build_query($args['html_parms']);
 
         $args = array(
                 'title' => $title,
                 'hdImg' => "$MythRokuDir/images/Mythtv_movie.png",
                 'sdImg' => "$MythRokuDir/images/Mythtv_movie.png",
-                'feed'  => htmlspecialchars("$MythRokuDir/{$args['script']}?$html_parms") );
-        xml_dir( $args );
+                'feed'  => htmlspecialchars("$MythRokuDir/$script?$parms") );
+        $xml_output = xml_dir( $args );
     }
+
+    return $xml_output;
 }
 
 ?>

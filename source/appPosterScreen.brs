@@ -45,7 +45,7 @@ function showPosterScreen(screen as object, category as object) as integer
     itemlist = feed.ItemList
 
     ' Change the List Style if this list is for recording
-    if feed.ListType = "recording" then
+    if feed.ListType = "rec" then
         screen.SetListStyle("arced-landscape")
     end if
 

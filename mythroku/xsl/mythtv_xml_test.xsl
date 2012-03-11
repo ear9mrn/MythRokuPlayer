@@ -8,11 +8,14 @@
                 <title>MythRoku Test Page</title>
             </head>
             <body bgcolor="white" text="blue">
-                <br />
-                <h1>MythRoku Test Page: <xsl:value-of select="feed/@listType"/></h1>
-                <br />
+                <h1>MythRoku Test Page:
+                    <xsl:choose>
+                        <xsl:when test="feed/@listType = 'vid'"> Videos</xsl:when>
+                        <xsl:when test="feed/@listType = 'rec'"> Recordings</xsl:when>
+                    </xsl:choose>
+                </h1>
                 Use this page to help diagnose any problems there may be with settings and configuration. If all data displays ok here then it should work with Roku!
-                <br /><br />
+                <br />
                 <xsl:apply-templates select="feed" />
             </body>
         </html>
