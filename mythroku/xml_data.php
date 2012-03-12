@@ -118,7 +118,8 @@ function build_query_vid( $sort )
 function build_query_rec( $sort )
 {
     // Start building SQL query
-    $SQL = "SELECT * FROM recorded";
+    $SQL  = "SELECT * FROM recorded ";
+    $SQL .= "INNER JOIN recordedprogram USING (programid)";
 
     // Filter file extentions
     $SQL .= " WHERE basename LIKE '%.mp4'";
@@ -148,7 +149,7 @@ function build_xml_vid( $sql_result, $index )
 
     while ( $db_field = mysql_fetch_assoc($sql_result) )
     {
-        $filename  = $db_field['filename'];
+        $filename = $db_field['filename'];
 
         $contentType = "movie";
         $episode     = "";
@@ -158,46 +159,47 @@ function build_xml_vid( $sql_result, $index )
             $episode     = $db_field['season'] . "-" . $db_field['episode'];
         }
 
-        $title      = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['title'] ));
-        $subtitle   = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['subtitle'] ));
-        $synopsis   = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['plot'] ));
-
-        $hdimg  = implode("/", array_map("rawurlencode", explode("/", $db_field['coverfile'])));
-        $sdimg  = $hdimg;
+        $hdimg = html_encode($db_field['coverfile']);
+        $sdimg = $hdimg;
 
         $quality = $RokuDisplayType;
         $isHD    = 'false';
         if ( 'HD' == $quality ) { $isHD = 'true'; }
 
-        $url = "$mythtvdata/video/" . implode("/", array_map("rawurlencode", explode("/", $filename)));
-
-        $genrenum = mysql_fetch_assoc(mysql_query("SELECT idgenre FROM videometadatagenre where idvideo='" . $db_field['intid'] . "' "));
-        if ($genrenum['idgenre'] == 0) { $genrenum['idgenre'] = 22; }
-        $genres = mysql_fetch_assoc(mysql_query("SELECT genre FROM videogenre where intid='" . $genrenum['idgenre'] . "' "));
-        $genre = $genres['genre'];
+        $SQL  = "SELECT * FROM videometadatagenre, videogenre ";
+        $SQL .= "WHERE videometadatagenre.idgenre = videogenre.intid ";
+        $SQL .= "AND idvideo='{$db_field['intid']}'";
+        $genre_result = mysql_query($SQL);
+        $genre_arr = array();
+        while ( $genres = mysql_fetch_assoc($genre_result) )
+        {
+            array_push($genre_arr, $genres['genre']);
+        }
+        $genre = implode( ", ", $genre_arr );
 
         $args = array(
-                'contentType' => $contentType,
-                'title'       => $title,
-                'subtitle'    => $subtitle,
-                'synopsis'    => $synopsis,
-                'hdImg'       => "$MythRokuDir/image.php?image=$hdimg",
-                'sdImg'       => "$MythRokuDir/image.php?image=$sdimg",
-                'streamBitrate'   => 0,
-                'streamUrl'       => $url,
-                'streamQuality'   => $quality,
-                'streamContentId' => $filename,
-                'streamFormat'    => pathinfo($filename, PATHINFO_EXTENSION),
-                'isHD'        => $isHD,
-                'episode'     => $episode,
-                'genres'      => $genre,
-                'runtime'     => $db_field['length'] * 60,
-                'date'        => date("m/d/Y", convert_date($db_field['releasedate'])),
-                'starRating'  => $db_field['userrating'] * 10,
-                'rating'      => $db_field['rating'],
-                'index'       => $index,
-                'isRecording' => 'false',
-                'delCmd'      => '' );
+            'contentType' => $contentType,
+            'title'       => html_cleanup($db_field['title']),
+            'subtitle'    => html_cleanup($db_field['subtitle']),
+            'synopsis'    => html_cleanup($db_field['plot']),
+            'hdImg'       => "$MythRokuDir/image.php?image=$hdimg",
+            'sdImg'       => "$MythRokuDir/image.php?image=$sdimg",
+            'streamBitrate'   => 0,
+            'streamUrl'       => "$mythtvdata/video/" . html_encode($filename),
+            'streamQuality'   => $quality,
+            'streamContentId' => $filename,
+            'streamFormat'    => pathinfo($filename, PATHINFO_EXTENSION),
+            'isHD'        => $isHD,
+            'episode'     => $episode,
+            'genres'      => $genre,
+            'runtime'     => $db_field['length'] * 60,
+            'date'        => date("m/d/Y", convert_date($db_field['releasedate'])),
+            'starRating'  => $db_field['userrating'] * 10,
+            'rating'      => $db_field['rating'],
+            'index'       => $index,
+            'isRecording' => 'false',
+            'delCmd'      => ''
+        );
 
         $xml .= xml_file( $args );
 
@@ -215,60 +217,53 @@ function build_xml_rec( $sql_result, $index )
 
     while ( $db_field = mysql_fetch_assoc($sql_result) )
     {
-        $filename  = $db_field['basename'];
-        $programid = $db_field['programid'];
+        $filename = $db_field['basename'];
 
-        $SQL = "SELECT * FROM recordedprogram WHERE programid='$programid'";
-        $tmp_result   = mysql_query($SQL);
-        $tmp_db_field = mysql_fetch_assoc($tmp_result);
+        $str_time = convert_datetime($db_field['starttime']);
+        $end_time = convert_datetime($db_field['endtime']);
 
         $contentType = "movie";
         $episode     = "";
-        if ( 'series' == $tmp_db_field['category_type'] )
+        if ( 'series' == $db_field['category_type'] )
         {
             $contentType = "episode";
-            $episode     = $tmp_db_field['syndicatedepisodenumber'];
+            $episode     = $db_field['syndicatedepisodenumber'];
         }
 
-        $title      = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['title'] ));
-        $subtitle   = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['subtitle'] ));
-        $synopsis   = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['description'] ));
-
-        $img    = $db_field['hostname'] . "/" . $db_field['chanid'] . "/" . convert_datetime($db_field['starttime']);
-        $hdimg  = "$img/100/56/-1/$filename.100x56x-1.png";
-        $sdimg  = "$img/100/75/-1/$filename.100x75x-1.png";
+        $img  = "{$db_field['hostname']}/{$db_field['chanid']}/$str_time";
+        $hdimg = "$img/100/56/-1/$filename.100x56x-1.png";
+        $sdimg = "$img/100/75/-1/$filename.100x75x-1.png";
 
         $quality = $RokuDisplayType;
         $isHD    = 'false';
-#       if ( '0' !== $tmp_db_field['hdtv'] ) { $quality = 'HD'; }
+#       if ( '0' !== $db_field['hdtv'] ) { $quality = 'HD'; }
         if ( 'HD' == $quality ) { $isHD = 'true'; }
 
-        $url = "$WebServer/pl/stream/" . $db_field['chanid'] . "/" . convert_datetime($db_field['starttime']);
-
-        $genre = htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['category'] ));
+        $url = "$WebServer/pl/stream/{$db_field['chanid']}/$str_time";
 
         $args = array(
-                'contentType' => $contentType,
-                'title'       => $title,
-                'subtitle'    => $subtitle,
-                'synopsis'    => $synopsis,
-                'hdImg'       => "$WebServer/tv/get_pixmap/$hdimg",
-                'sdImg'       => "$WebServer/tv/get_pixmap/$sdimg",
-                'streamBitrate'   => 0,
-                'streamUrl'       => $url,
-                'streamQuality'   => $quality,
-                'streamContentId' => $filename,
-                'streamFormat'    => pathinfo($filename, PATHINFO_EXTENSION),
-                'isHD'        => $isHD,
-                'episode'     => $episode,
-                'genres'      => $genre,
-                'runtime'     => convert_datetime($db_field['endtime']) - convert_datetime($db_field['starttime']),
-                'date'        => date("m/d/Y h:ia", convert_datetime($db_field['starttime'])),
-                'starRating'  => 0,
-                'rating'      => '',
-                'index'       => $index,
-                'isRecording' => 'true',
-                'delCmd'      => "$MythRokuDir/mythtv_tv_del.php?basename=$filename" );
+            'contentType' => $contentType,
+            'title'       => html_cleanup($db_field['title']),
+            'subtitle'    => html_cleanup($db_field['subtitle']),
+            'synopsis'    => html_cleanup($db_field['description']),
+            'hdImg'       => "$WebServer/tv/get_pixmap/$hdimg",
+            'sdImg'       => "$WebServer/tv/get_pixmap/$sdimg",
+            'streamBitrate'   => 0,
+            'streamUrl'       => $url,
+            'streamQuality'   => $quality,
+            'streamContentId' => $filename,
+            'streamFormat'    => pathinfo($filename, PATHINFO_EXTENSION),
+            'isHD'        => $isHD,
+            'episode'     => $episode,
+            'genres'      => html_cleanup($db_field['category']),
+            'runtime'     => $end_time - $str_time,
+            'date'        => date("m/d/Y h:ia", $str_time),
+            'starRating'  => 0,
+            'rating'      => '',
+            'index'       => $index,
+            'isRecording' => 'true',
+            'delCmd'      => "$MythRokuDir/mythtv_tv_del.php?basename=$filename"
+        );
 
         $xml .= xml_file( $args );
 
@@ -298,6 +293,16 @@ function convert_datetime( $datetime )
     $timestamp = mktime($hour, $minute, $second, $month, $day, $year);
 
     return $timestamp;
+}
+
+function html_cleanup($str)
+{
+    return htmlspecialchars( preg_replace('/[^(\x20-\x7F)]*/', '', $str) );
+}
+
+function html_encode($str)
+{
+    return implode("/", array_map("rawurlencode", explode("/", $str)));
 }
 
 ?>
