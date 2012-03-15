@@ -127,14 +127,13 @@ function build_query_rec( $sort )
     $SQL .=    " OR basename LIKE '%.mov'";
 
     // Add sorting
-    $SQL .= "ORDER BY ";
     switch ( $sort )
     {
-        case 'title':    $SQL .= "recorded.title ASC";            break;
-        case 'date':     $SQL .= "starttime, recorded.title ASC"; break;
-        case 'channel':  $SQL .= "chanid, recorded.title ASC";    break;
-        case 'genre':    $SQL .= "category, recorded.title ASC";  break;
-        case 'recgroup': $SQL .= "recgroup, recorded.title ASC";  break;
+        case 'title':    $SQL .= " ORDER BY recorded.title ASC";                     break;
+        case 'date':     $SQL .= " ORDER BY recorded.starttime, recorded.title ASC"; break;
+        case 'channel':  $SQL .= " ORDER BY recorded.chanid, recorded.title ASC";    break;
+        case 'genre':    $SQL .= " ORDER BY recorded.category, recorded.title ASC";  break;
+        case 'recgroup': $SQL .= " ORDER BY recorded.recgroup, recorded.title ASC";  break;
     }
 
     return $SQL;
