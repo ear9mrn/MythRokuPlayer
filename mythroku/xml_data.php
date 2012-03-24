@@ -19,8 +19,11 @@ function get_xml_data()
     $sort = '';
     if ( isset($_GET['sort']) ) { $sort = $_GET['sort']; }
 
-    $start_row = 0;
-    if ( isset($_GET['index']) ) { $start_row = $_GET['index']; }
+    $start_row = 1;
+    if ( isset($_GET['index']) and (0 < $_GET['index']) )
+    {
+        $start_row = $_GET['index'];
+    }
 
     $test = false;
     if ( isset($_GET['test']) ) { $test = true; }
@@ -45,10 +48,17 @@ function get_xml_data()
     $sql_result = mysql_query($SQL);
     $total_rows = mysql_num_rows($sql_result);
 
+    // Check boundry limits
+    if ( $total_rows < $start_row )
+    {
+        $start_row = $total_rows;
+        $_GET['index'] = $start_row;
+    }
+
     // Limit the number results
     if ( 0 !== $ResultLimit )
     {
-        $SQL .= " LIMIT $start_row, $ResultLimit";
+        $SQL .= " LIMIT " . ($start_row - 1) . ", $ResultLimit";
 
         // Get the subset results
         $sql_result = mysql_query($SQL);
@@ -182,16 +192,16 @@ function build_xml_vid( $sql_result, $index )
             'title'       => html_cleanup($db_field['title']),
             'subtitle'    => html_cleanup($db_field['subtitle']),
             'synopsis'    => html_cleanup($db_field['plot']),
-            'hdImg'       => "$MythRokuDir/image.php?image=$hdimg",
-            'sdImg'       => "$MythRokuDir/image.php?image=$sdimg",
+            'hdImg'       => "$MythRokuDir/image.php?image=" . html_cleanup($hdimg),
+            'sdImg'       => "$MythRokuDir/image.php?image=" . html_cleanup($sdimg),
             'streamBitrate'   => 0,
             'streamUrl'       => "$mythtvdata/video/" . html_encode($filename),
             'streamQuality'   => $quality,
-            'streamContentId' => $filename,
+            'streamContentId' => html_cleanup($filename),
             'streamFormat'    => pathinfo($filename, PATHINFO_EXTENSION),
             'isHD'        => $isHD,
-            'episode'     => $episode,
-            'genres'      => $genre,
+            'episode'     => html_cleanup($episode),
+            'genres'      => html_cleanup($genre),
             'runtime'     => $db_field['length'] * 60,
             'date'        => date("m/d/Y", convert_date($db_field['releasedate'])),
             'starRating'  => $db_field['userrating'] * 10,
@@ -222,6 +232,8 @@ function build_xml_rec( $sql_result, $index )
         $str_time = convert_datetime($db_field['starttime']);
         $end_time = convert_datetime($db_field['endtime']);
 
+        $chanid_strtime = "{$db_field['chanid']}/$str_time";
+
         $contentType = "movie";
         $episode     = "";
         if ( 'series' == $db_field['category_type'] )
@@ -230,7 +242,7 @@ function build_xml_rec( $sql_result, $index )
             $episode     = $db_field['syndicatedepisodenumber'];
         }
 
-        $img  = "{$db_field['hostname']}/{$db_field['chanid']}/$str_time";
+        $img  = "{$db_field['hostname']}/$chanid_strtime";
         $hdimg = "$img/100/56/-1/$filename.100x56x-1.png";
         $sdimg = "$img/100/75/-1/$filename.100x75x-1.png";
 
@@ -239,22 +251,20 @@ function build_xml_rec( $sql_result, $index )
 #       if ( '0' !== $db_field['hdtv'] ) { $quality = 'HD'; }
         if ( 'HD' == $quality ) { $isHD = 'true'; }
 
-        $url = "$WebServer/pl/stream/{$db_field['chanid']}/$str_time";
-
         $args = array(
             'contentType' => $contentType,
             'title'       => html_cleanup($db_field['title']),
             'subtitle'    => html_cleanup($db_field['subtitle']),
             'synopsis'    => html_cleanup($db_field['description']),
-            'hdImg'       => "$WebServer/tv/get_pixmap/$hdimg",
-            'sdImg'       => "$WebServer/tv/get_pixmap/$sdimg",
+            'hdImg'       => "$WebServer/tv/get_pixmap/" . html_cleanup($hdimg),
+            'sdImg'       => "$WebServer/tv/get_pixmap/" . html_cleanup($sdimg),
             'streamBitrate'   => 0,
-            'streamUrl'       => $url,
+            'streamUrl'       => "$WebServer/pl/stream/" . html_encode($chanid_strtime),
             'streamQuality'   => $quality,
-            'streamContentId' => $filename,
+            'streamContentId' => html_cleanup($filename),
             'streamFormat'    => pathinfo($filename, PATHINFO_EXTENSION),
             'isHD'        => $isHD,
-            'episode'     => $episode,
+            'episode'     => html_cleanup($episode),
             'genres'      => html_cleanup($db_field['category']),
             'runtime'     => $end_time - $str_time,
             'date'        => date("m/d/Y h:ia", $str_time),
@@ -262,7 +272,7 @@ function build_xml_rec( $sql_result, $index )
             'rating'      => '',
             'index'       => $index,
             'isRecording' => 'true',
-            'delCmd'      => "$MythRokuDir/mythtv_tv_del.php?basename=$filename"
+            'delCmd'      => "$MythRokuDir/mythtv_tv_del.php?basename=" . html_encode($filename)
         );
 
         $xml .= xml_file( $args );
@@ -294,6 +304,8 @@ function convert_datetime( $datetime )
 
     return $timestamp;
 }
+
+//------------------------------------------------------------------------------
 
 function html_cleanup($str)
 {

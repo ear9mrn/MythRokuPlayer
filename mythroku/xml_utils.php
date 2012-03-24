@@ -24,6 +24,8 @@ EOF;
 
 }
 
+//------------------------------------------------------------------------------
+
 function xml_file( $args )
 {
     return <<<EOF
@@ -75,26 +77,24 @@ EOF;
 
 }
 
+//------------------------------------------------------------------------------
+
 function xml_start_dir( $args )
 {
     $xml_output = '';
 
     require 'settings.php';
 
-    if ( 0 < $args['start_row'] )
+    if ( 1 < $args['start_row'] )
     {
         $startIndex = $args['start_row'] - $ResultLimit;
-        if ( 0 > $startIndex )
+        if ( 1 > $startIndex )
         {
-            $startIndex = 0;
+            $startIndex = 1;
         }
         $args['html_parms']['index'] = $startIndex;
 
-        $endIndex = $startIndex + $ResultLimit - 1;
-        if ( $endIndex >= $args['start_row'] )
-        {
-            $endIndex = $args['start_row'] - 1;
-        }
+        $endIndex = $args['start_row'] - 1;
 
         $title = ( $startIndex == $endIndex )
                             ? "Index $startIndex"
@@ -123,7 +123,7 @@ function xml_end_dir( $args )
 
     require 'settings.php';
 
-    if ( $args['total_rows'] > $args['start_row'] + $args['result_rows'] )
+    if ( $args['total_rows'] >= $args['start_row'] + $args['result_rows'] )
     {
         $startIndex = $args['start_row'] + $ResultLimit;
         if ( $args['total_rows'] < $startIndex )
@@ -133,9 +133,9 @@ function xml_end_dir( $args )
         $args['html_parms']['index'] = $startIndex;
 
         $endIndex = $startIndex + $ResultLimit - 1;
-        if ( $endIndex >= $args['total_rows'] )
+        if ( $endIndex > $args['total_rows'] )
         {
-            $endIndex = $args['total_rows'] - 1;
+            $endIndex = $args['total_rows'];
         }
 
         $title = ( $startIndex == $endIndex )
