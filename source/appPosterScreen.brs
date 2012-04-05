@@ -5,33 +5,34 @@
 '******************************************************
 
 '******************************************************
-'** Perform any startup/initialization stuff prior to 
-'** initially showing the screen.  
+'** Perform any startup/initialization stuff prior to
+'** initially showing the screen.
 '******************************************************
-Function preShowPosterScreen(breadA=invalid, breadB=invalid) As Object
+function preShowPosterScreen(breadA=invalid, breadB=invalid) as object
 
     if validateParam(breadA, "roString", "preShowPosterScreen", true) = false return -1
     if validateParam(breadB, "roString", "preShowPosterScreen", true) = false return -1
 
-    port=CreateObject("roMessagePort")
+    port   = CreateObject("roMessagePort")
     screen = CreateObject("roPosterScreen")
     screen.SetMessagePort(port)
+
     if breadA<>invalid and breadB<>invalid then
         screen.SetBreadcrumbText(breadA, breadB)
     end if
 
-    screen.SetListStyle("arced-landscape")
+    screen.SetListStyle("arced-portrait")
+
     return screen
 
-End Function
-
+end function
 
 '******************************************************
-'** Display the home screen and wait for events from 
+'** Display the home screen and wait for events from
 '** the screen. The screen will show retreiving while
 '** we fetch and parse the feeds for the game posters
 '******************************************************
-Function showPosterScreen(screen As Object, category As Object) As Integer
+function showPosterScreen(screen as object, category as object) as integer
 
     if validateParam(screen, "roPosterScreen", "showPosterScreen") = false return -1
     if validateParam(category, "roAssociativeArray", "showPosterScreen") = false return -1
@@ -40,7 +41,17 @@ Function showPosterScreen(screen As Object, category As Object) As Integer
     m.curShow     = 0
 
     screen.SetListNames(getCategoryList(category)) 'comment out to not show categories
-    screen.SetContentList(getShowsForCategoryItem(category, m.curCategory))
+    feed = getShowsForCategoryItem(category.kids[m.curCategory])
+    itemlist = feed.ItemList
+
+    ' Change the List Style if this list is for recording
+    if feed.ListType = "rec" then
+        screen.SetListStyle("arced-landscape")
+    end if
+
+    screen.SetContentList(itemlist)
+    screen.SetFocusToFilterBanner(false)
+    screen.SetFocusedListItem(0)
     screen.Show()
 
     while true
@@ -51,45 +62,51 @@ Function showPosterScreen(screen As Object, category As Object) As Integer
                 m.curCategory = msg.GetIndex()
                 m.curShow = 0
                 screen.SetFocusedListItem(m.curShow)
-                screen.SetContentList(getShowsForCategoryItem(category, m.curCategory))
+                screen.SetContentList(getShowsForCategoryItem(category.kids[m.curCategory]).ItemList)
                 print "list focused | current category = "; m.curCategory
             else if msg.isListItemSelected() then
                 m.curShow = msg.GetIndex()
                 print "list item selected | current show = "; m.curShow
-                m.curShow = displayShowDetailScreen(category, m.curShow)
+
+                if ( itemlist[m.curShow].ItemType = "dir" ) then
+                    itemlist = getShowsForCategoryItem(itemlist[m.curShow]).ItemList
+                    screen.SetContentList(itemlist)
+                    screen.Show()
+                else
+                    m.curShow = displayShowDetailScreen(category, itemlist, m.curShow)
+                end if
+
                 screen.SetFocusedListItem(m.curShow)
                 print "list item updated  | new show = "; m.curShow
             else if msg.isScreenClosed() then
                 return -1
             end if
-        end If
+        end if
     end while
 
-
-End Function
+end function
 
 '**********************************************************
 '** When a poster on the home screen is selected, we call
-'** this function passing an associative array with the 
-'** data for the selected show.  This data should be 
+'** this function passing an associative array with the
+'** data for the selected show.  This data should be
 '** sufficient for the show detail (springboard) to display
 '**********************************************************
-Function displayShowDetailScreen(category as Object, showIndex as Integer) As Integer
+function displayShowDetailScreen(category as object, itemlist as object, itemIndex as integer) as integer
 
     if validateParam(category, "roAssociativeArray", "displayShowDetailScreen") = false return -1
 
-    shows = getShowsForCategoryItem(category, m.curCategory)
     screen = preShowDetailScreen(category.Title, category.kids[m.curCategory].Title)
-    showIndex = showDetailScreen(screen, shows, showIndex)
+    itemIndex = showDetailScreen(screen, itemlist, itemIndex)
 
-    return showIndex
-End Function
+    return itemIndex
 
+end function
 
 '**************************************************************
 '** Given an roAssociativeArray representing a category node
-'** from the category feed tree, return an roArray containing 
-'** the names of all of the sub categories in the list. 
+'** from the category feed tree, return an roArray containing
+'** the names of all of the sub categories in the list.
 '***************************************************************
 Function getCategoryList(topCategory As Object) As Object
 
@@ -115,12 +132,12 @@ End Function
 '** displayed should be refreshed to corrrespond to the highlighted
 '** item.  This function returns the list of shows for that category
 '********************************************************************
-Function getShowsForCategoryItem(category As Object, item As Integer) As Object
+function getShowsForCategoryItem(item as object) as object
 
-    if validateParam(category, "roAssociativeArray", "getCategoryList") = false return invalid 
+    conn = InitShowFeedConnection(item)
+    feed = conn.LoadShowFeed(conn)
 
-    conn = InitShowFeedConnection(category.kids[item])
-    showList = conn.LoadShowFeed(conn)
-    return showList
+    return feed
 
-End Function
+end function
+
