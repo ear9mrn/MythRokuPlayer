@@ -1,1 +1,5 @@
    RewriteEngine off
+
+   order deny,allow
+	deny from all
+	allow from 192.168.1.0

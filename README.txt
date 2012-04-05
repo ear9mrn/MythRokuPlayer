@@ -1,69 +1,103 @@
-The videoplayer example demonstrates a hierarchical,
-category based video playback application. The
-application allows the playback of a selection 
-of TED Talks videos which are organized by category.
-  
-The application uses a category based XML feed 
-to drive the application. The XML describes all
-of the categories used, artwork required and
-videos to be played. The hierarchy of categories 
-is described in the file categories.xml.  
-The actual XML request/response uses our servers, 
-but the XML is all included for reference.
-
-Each category branch node, ultimately terminates at a 
-leaf node that lists details for all of the videos 
-included in that category. The XML for the leaf 
-nodes is also included and named in the format 
-<category>.xml.
-
-It is possible to easily use this as a template 
-for a production application by implementing the 
-appropriate web service API's to provide the 
-category and content XML feeds. You must also
-oku 2010 Peter Nevill
+MythRoku 2010 Peter Nevill
 Unless otherwise stated (the @license tag at the top of the file), all files are distributed under 
 the GNU General Public License.
-appropriate for your application.
 
-Contents of the application directories are:
+MythRoku is for streaming mythtv recordings and video via Roku player
+It is based on the videoplayer example from Roku
 
-images   - Artwork that is embedded as part of 
-           the application. In general, this 
-           should be kept to a minimum to conserve 
-           space on flash, and is usually just the 
-           main menu icons, plus the logo and 
-           overhang used for branding.
-source   - The complete BrightScript source code 
-           for the application
-xml      - Examples of the XML returned by the 
-           server for reference
-artwork  - Examples of the artwork returned by the 
-           server for reference.  
-manifest - This file describes the application 
-           package and is used on the main menu 
-           prior to the start of execution for the 
-           application.
-Makefile - Optional method of building the application 
-           using "make". This has been provided for 
-           convenience and tested on OSX and linux.
+prerequisits:
+
+-functioning mythtv backend and mythweb (with function streaming of recordings)
+-handbrakecli (for converting recordings to H.264 format)
+-Mythtv video are stored in H.264 format (mp4)
+-web user (eg. apache) permission to delete recordings
+
+for more information see the Roku developer site:
+http://www.roku.com/developer
 
 
-Note: The xml and artwork directories are NOT part of the application
-      package, but can be saved as an archive using the "make archive"
-      target. The makefile also can push the development app directly
-      to the device if "make" and "curl" are available. See the comments
-      in the Makefile for more information.
+1) you need to set up you Roku box in developer mode to install new channels.
+	Use remote and enter Home 3x, Up 2x, Right, Left, Right, Left, Right
+	
+	add the following to your .bashrc file "ROKU_DEV_TARGET=roku.ip" 
+	Where roku.ip is the ip address of your Roku player.
 
-      **************************************************
+2) you need to modify mythweb to enable streaming of mp4 files.
+ 	modify /usr/share/mythtv/mythweb/includes/utils.php by adding the 
+	following around line 247
+	
+	case 'mp4' : return "$url.mp4";
+	
+        and in the following file /usr/share/mythtv/mythweb/modules/stream/stream_raw.pl
 
-This example uses videos streamed directly from the TED Talks 
-website (www.ted.com). Please visit the TED website to see the
-full lineup of talks made available by TED. 
+	add an additonal elseif in the file type section 
 
-Please see the following for license details:
-http://creativecommons.org/licenses/by-nc-nd/3.0/
+        elsif ($basename =~ /\.mp4$/) {
+        $type = 'video/mp4';
+        $suffix = '.mp4';
+	}
+	
+	if you are using authentication to protect your mythweb (best practice)
+	you need to add the following to your mythweb.conf file (near the top)
+	
+	<LocationMatch .*/mythroku*>
+        	Allow from 192.168.1.0
+    	</LocationMatch>
 
 
+3) add the MythRokuPlayer directory to your mythweb directory and change the permission
+	to that of your webserver. Ensure that the .htaccess file is in that directory
+        as well. The .htaccess file in the mythroku directory simply has:
+
+	RewriteEngine off
+
+	This is to stop mythweb adding its templates to the xml data.
+
+	You need to edit the settings.php file with your local parameters for example
+	ip or url of your webserver.
+
+4) convert recordings from mpg to mp4
+	create a user job in mythtv (mythbackend setup-> general-> Job Queue)
+	add the following to a job command
+
+	/pathtomythweb/mythroku/rokuencode.sh "%DIR%" "%FILE%"
+	
+	to make it a default job run after every recording. In your mythconverge->setting
+	set the AutoRunUserJob1 (or whichever job you set it to) data = 1
+	
+	This will automatically encode a recording to mp4 format which can then be
+	streamed by roku
+	
+5) install mythroku to your roku player
+	in the mythroku directory (containing this read me,
+		this has to be called "MythRokuPlayer") simply type
+	
+	make install
+
+	once installed you will need to set the path to the mythroku directory
+	on your webserver on the mythroku settings on roku
+
+	eg. http//192.168.1.10/mythweb/mythroku
+
+6) Debuging, you have a couple of options:
+	
+	telnet $ROKU_DEV_TARGET 8080
+
+	will give you any output from the player for debug
+
+	You may need to comment out the following line
+	bind-address = 127.0.0.1 in /etc/my.cnf to allow access to mysql
+
+	I have created two php files
+	
+	mythtv_movies_test.php
+	mythtv_tv_test.php
+
+	use these to check your setup. They draw the same data that is used to create
+	the xml files for roku. If these do not work then mythroku will not.
 
 
+Good luck and happy streaming.
+
+		
+	
