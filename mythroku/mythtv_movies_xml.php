@@ -44,7 +44,7 @@ while ($db_field = mysql_fetch_assoc($result) ) {
         $genre = mysql_fetch_assoc(mysql_query("SELECT genre FROM videogenre where intid='" . $genrenum['idgenre'] . "' "));
 
 		print "	
-		<item sdImg=\"" . $WebServer . "/mythweb/mythroku/image.php?image=" . rawurlencode($db_field['coverfile']) . "\" hdImg=\"" . $WebServer . "/mythroku/image.php?image=" . rawurlencode($db_field['coverfile']) . "\">
+		<item sdImg=\"" . $WebServer . "/mythweb/mythroku/image.php?image=" . implode("/", array_map("rawurlencode", explode("/", $db_field['coverfile']))) . "\" hdImg=\"" . $WebServer . "/mythroku/image.php?image=" . implode("/", array_map("rawurlencode", explode("/", $db_field['coverfile']))) . "\">
 			<title>" . htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['title'] )) . "</title>
 			<contentId>" . $counter++ . "</contentId>
 			<contentType>Movies</contentType>
@@ -53,7 +53,7 @@ while ($db_field = mysql_fetch_assoc($result) ) {
 				<streamFormat>mp4</streamFormat>
 				<streamQuality>". $RokuDisplayType . "</streamQuality>
 				<streamBitrate>". $BitRate . "</streamBitrate>
-				<streamUrl>" . $WebServer . "/data/video/" . rawurlencode($db_field['filename']) ."</streamUrl>
+				<streamUrl>" . $WebServer . "/data/video/" . implode("/", array_map("rawurlencode", explode("/", $db_field['filename']))) ."</streamUrl>
 			</media>
 			<synopsis>" . htmlspecialchars(preg_replace('/[^(\x20-\x7F)]*/','', $db_field['plot'] )) . "</synopsis>	
 			<genres>" . $genre['genre'] . "</genres>
