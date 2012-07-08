@@ -172,9 +172,10 @@ function build_xml_vid( $sql_result, $index )
         $hdimg = html_encode($db_field['coverfile']);
         $sdimg = $hdimg;
 
-        $quality = $RokuDisplayType;
-        $isHD    = 'false';
-        if ( 'HD' == $quality ) { $isHD = 'true'; }
+        $bitrate   = 0;
+        $url       = "$mythtvdata/video/" . html_encode($filename);
+        $contentId = html_cleanup($filename);
+        $format    = pathinfo($filename, PATHINFO_EXTENSION);
 
         $SQL  = "SELECT * FROM videometadatagenre, videogenre ";
         $SQL .= "WHERE videometadatagenre.idgenre = videogenre.intid ";
@@ -194,12 +195,16 @@ function build_xml_vid( $sql_result, $index )
             'synopsis'    => html_cleanup($db_field['plot']),
             'hdImg'       => "$MythRokuDir/image.php?image=" . html_cleanup($hdimg),
             'sdImg'       => "$MythRokuDir/image.php?image=" . html_cleanup($sdimg),
-            'streamBitrate'   => 0,
-            'streamUrl'       => "$mythtvdata/video/" . html_encode($filename),
-            'streamQuality'   => $quality,
-            'streamContentId' => html_cleanup($filename),
-            'streamFormat'    => pathinfo($filename, PATHINFO_EXTENSION),
-            'isHD'        => $isHD,
+
+            'hdBitrate'   => $bitrate,
+            'hdUrl'       => $url,
+            'hdContentId' => $contentId . "_hd",
+            'hdFormat'    => $format,
+            'sdBitrate'   => $bitrate,
+            'sdUrl'       => $url,
+            'sdContentId' => $contentId . "_sd",
+            'sdFormat'    => $format,
+
             'episode'     => html_cleanup($episode),
             'genres'      => html_cleanup($genre),
             'runtime'     => $db_field['length'] * 60,
@@ -246,10 +251,10 @@ function build_xml_rec( $sql_result, $index )
         $hdimg = "$img/100/56/-1/$filename.100x56x-1.png";
         $sdimg = "$img/100/75/-1/$filename.100x75x-1.png";
 
-        $quality = $RokuDisplayType;
-        $isHD    = 'false';
-#       if ( '0' !== $db_field['hdtv'] ) { $quality = 'HD'; }
-        if ( 'HD' == $quality ) { $isHD = 'true'; }
+        $bitrate   = 0;
+        $url       = "$WebServer/pl/stream/" . html_encode($chanid_strtime);
+        $contentId = html_cleanup($filename);
+        $format    = pathinfo($filename, PATHINFO_EXTENSION);
 
         $args = array(
             'contentType' => $contentType,
@@ -258,12 +263,16 @@ function build_xml_rec( $sql_result, $index )
             'synopsis'    => html_cleanup($db_field['description']),
             'hdImg'       => "$WebServer/tv/get_pixmap/" . html_cleanup($hdimg),
             'sdImg'       => "$WebServer/tv/get_pixmap/" . html_cleanup($sdimg),
-            'streamBitrate'   => 0,
-            'streamUrl'       => "$WebServer/pl/stream/" . html_encode($chanid_strtime),
-            'streamQuality'   => $quality,
-            'streamContentId' => html_cleanup($filename),
-            'streamFormat'    => pathinfo($filename, PATHINFO_EXTENSION),
-            'isHD'        => $isHD,
+
+            'hdBitrate'   => $bitrate,
+            'hdUrl'       => $url,
+            'hdContentId' => $contentId . "_hd",
+            'hdFormat'    => $format,
+            'sdBitrate'   => $bitrate,
+            'sdUrl'       => $url,
+            'sdContentId' => $contentId . "_sd",
+            'sdFormat'    => $format,
+
             'episode'     => html_cleanup($episode),
             'genres'      => html_cleanup($db_field['category']),
             'runtime'     => $end_time - $str_time,

@@ -38,13 +38,19 @@ function xml_file( $args )
         <hdImg>{$args['hdImg']}</hdImg>
         <sdImg>{$args['sdImg']}</sdImg>
         <media>
-            <streamBitrate>{$args['streamBitrate']}</streamBitrate>
-            <streamUrl>{$args['streamUrl']}</streamUrl>
-            <streamQuality>{$args['streamQuality']}</streamQuality>
-            <streamContentId>{$args['streamContentId']}</streamContentId>
-            <streamFormat>{$args['streamFormat']}</streamFormat>
+            <streamBitrate>{$args['hdBitrate']}</streamBitrate>
+            <streamUrl>{$args['hdUrl']}</streamUrl>
+            <streamQuality>HD</streamQuality>
+            <streamContentId>{$args['hdContentId']}</streamContentId>
+            <streamFormat>{$args['hdFormat']}</streamFormat>
         </media>
-        <isHD>{$args['isHD']}</isHD>
+        <media>
+            <streamBitrate>{$args['sdBitrate']}</streamBitrate>
+            <streamUrl>{$args['sdUrl']}</streamUrl>
+            <streamQuality>SD</streamQuality>
+            <streamContentId>{$args['sdContentId']}</streamContentId>
+            <streamFormat>{$args['sdFormat']}</streamFormat>
+        </media>
         <episode>{$args['episode']}</episode>
         <genres>{$args['genres']}</genres>
         <runtime>{$args['runtime']}</runtime>

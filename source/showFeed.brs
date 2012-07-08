@@ -66,11 +66,11 @@ function init_show_feed_file() as object
     o.HDPosterUrl = ""
     o.SDPosterUrl = ""
 
-    o.StreamBitrates    = CreateObject("roArray", 1, true)
-    o.StreamUrls        = CreateObject("roArray", 1, true)
-    o.StreamQualities   = CreateObject("roArray", 1, true)
-    o.StreamContentIDs  = CreateObject("roArray", 1, true)
-    o.StreamFormat      = CreateObject("roArray", 1, true)
+    o.StreamBitrates    = CreateObject("roArray", 2, true)
+    o.StreamUrls        = CreateObject("roArray", 2, true)
+    o.StreamQualities   = CreateObject("roArray", 2, true)
+    o.StreamContentIDs  = CreateObject("roArray", 2, true)
+    o.StreamFormat      = CreateObject("roArray", 2, true)
 
     o.Length            = 0
     o.BookmarkPosition  = 0
@@ -219,12 +219,14 @@ function parse_file( e as object ) as object
     o.HDPosterUrl = validstr(e.hdImg.GetText()      )
     o.SDPosterUrl = validstr(e.sdImg.GetText()      )
 
-    s = e.media[0]
-    o.StreamBitrates.Push(  strtoi(  s.streamBitrate.GetText())  )
-    o.StreamUrls.Push(      validstr(s.streamUrl.GetText())      )
-    o.StreamQualities.Push( validstr(s.streamQuality.GetText())  )
-    o.StreamContentIDs.Push(validstr(s.streamContentId.GetText()))
-    o.StreamFormat.Push(    validstr(s.streamFormat.GetText())   )
+    for i = 0 to 1
+        s = e.media[i]
+        o.StreamBitrates.Push(  strtoi(  s.streamBitrate.GetText())  )
+        o.StreamUrls.Push(      validstr(s.streamUrl.GetText())      )
+        o.StreamQualities.Push( validstr(s.streamQuality.GetText())  )
+        o.StreamContentIDs.Push(validstr(s.streamContentId.GetText()))
+        o.StreamFormat.Push(    validstr(s.streamFormat.GetText())   )
+    next i
 
     o.Length             = strtoi(  e.runtime.GetText()   )
 '   o.BookmarkPosition   = strtoi(  e..GetText()          )
