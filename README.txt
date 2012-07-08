@@ -38,9 +38,6 @@ Setup
             $suffix = '.mp4';
 	    }
 
-	if you are using authentication to protect your mythweb (best practice)
-	you need to add the following to your mythweb.conf file (near the top)
-
  3) Set up the mythroku directory
 
     You can simply copy the mythroku directory to you mythweb directory
@@ -118,6 +115,8 @@ MySQL:
 You can use mythtv_test.php to check your setup. They draw from the same data
 that is used to create the XML files for the Roku. If this does not work, then
 MythRoku will not.
+NOTE: You may need to install php5-xsl (sudo apt-get install php5-xsl) to get
+      the mythtv_test.php script to output properly.
 
 --------------------------------------------------------------------------------
 Additional Tools

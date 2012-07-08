@@ -16,7 +16,7 @@ function get_xml_data()
         default: die( "Invalid parameter: [type]=[$type]\n" );
     }
 
-    $sort = '';
+    $sort = 'title'; // default
     if ( isset($_GET['sort']) ) { $sort = $_GET['sort']; }
 
     $start_row = 1;
@@ -33,7 +33,7 @@ function get_xml_data()
     $db_found  = mysql_select_db($MythTVdb, $db_handle);
     if ( !$db_found )
     {
-        die( 'Database NOT found' . mysql_error() . '\n' );
+        die( 'Database NOT found: ' . mysql_error() );
     }
 
     // Build SQL query
