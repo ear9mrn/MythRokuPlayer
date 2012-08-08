@@ -26,56 +26,94 @@ EOF;
 
 //------------------------------------------------------------------------------
 
+# Builds XML for a file.
 function xml_file( $args )
 {
-    return <<<EOF
+    $genre_str = implode( ", ", $args['genres'] );
+
+    $xml = <<<EOF
     <item>
         <itemType>file</itemType>
-        <contentType>{$args['contentType']}</contentType>
+        <index>{$args['index']}</index>
         <title>{$args['title']}</title>
         <subtitle>{$args['subtitle']}</subtitle>
-        <synopsis>{$args['synopsis']}</synopsis>
         <hdImg>{$args['hdImg']}</hdImg>
         <sdImg>{$args['sdImg']}</sdImg>
-        <media>
-            <streamBitrate>{$args['hdBitrate']}</streamBitrate>
-            <streamUrl>{$args['hdUrl']}</streamUrl>
-            <streamQuality>HD</streamQuality>
-            <streamContentId>{$args['hdContentId']}</streamContentId>
-            <streamFormat>{$args['hdFormat']}</streamFormat>
-        </media>
-        <media>
-            <streamBitrate>{$args['sdBitrate']}</streamBitrate>
-            <streamUrl>{$args['sdUrl']}</streamUrl>
-            <streamQuality>SD</streamQuality>
-            <streamContentId>{$args['sdContentId']}</streamContentId>
-            <streamFormat>{$args['sdFormat']}</streamFormat>
-        </media>
-        <episode>{$args['episode']}</episode>
-        <genres>{$args['genres']}</genres>
+        <synopsis>{$args['synopsis']}</synopsis>
+        <contentType>{$args['contentType']}</contentType>
+
+EOF;
+
+    if ( 'episode' == $args['contentType'] )
+    {
+        $episode = '';
+        if ( $args['episode']['legacy'] )
+        {
+            $episode = $args['episode']['legacy'];
+        }
+        else
+        {
+            $episode = $args['episode']['season'] . ' - ' .
+                       $args['episode']['episode'];
+        }
+
+            $xml .= <<<EOF
+        <episode>$episode</episode>
+
+EOF;
+
+    }
+
+    $xml .= <<<EOF
+        <genres>$genre_str</genres>
         <runtime>{$args['runtime']}</runtime>
         <date>{$args['date']}</date>
         <starRating>{$args['starRating']}</starRating>
         <rating>{$args['rating']}</rating>
-        <index>{$args['index']}</index>
         <isRecording>{$args['isRecording']}</isRecording>
         <delCmd>{$args['delCmd']}</delCmd>
+        <stream>
+            <bitrate>{$args['hdStream']['bitrate']}</bitrate>
+            <url>{$args['hdStream']['url']}</url>
+            <quality>HD</quality>
+            <contentId>{$args['hdStream']['contentId']}</contentId>
+            <format>{$args['hdStream']['format']}</format>
+        </stream>
+        <stream>
+            <bitrate>{$args['sdStream']['bitrate']}</bitrate>
+            <url>{$args['sdStream']['url']}</url>
+            <quality>SD</quality>
+            <contentId>{$args['sdStream']['contentId']}</contentId>
+            <format>{$args['sdStream']['format']}</format>
+        </stream>
     </item>
 
 
 EOF;
 
+    return $xml;
 }
 
+# Builds XML for a directory.
+#   Required Args: html_parms and title
 function xml_dir( $args )
 {
+    require 'settings.php';
+
+    $script = isset($args['html_parms']['test']) ? 'mythtv_test.php'
+                                                 : 'mythtv_xml.php';
+
+    $parms = http_build_query($args['html_parms']);
+
+    $feed = htmlspecialchars("$MythRokuDir/$script?$parms");
+
     return <<<EOF
     <item>
         <itemType>dir</itemType>
         <title>{$args['title']}</title>
-        <hdImg>{$args['hdImg']}</hdImg>
-        <sdImg>{$args['sdImg']}</sdImg>
-        <feed>{$args['feed']}</feed>
+        <hdImg>$MythRokuDir/images/Mythtv_movie.png</hdImg>
+        <sdImg>$MythRokuDir/images/Mythtv_movie.png</sdImg>
+        <feed>$feed</feed>
     </item>
 
 
@@ -102,21 +140,10 @@ function xml_start_dir( $args )
 
         $endIndex = $args['start_row'] - 1;
 
-        $title = ( $startIndex == $endIndex )
-                            ? "Index $startIndex"
-                            : "Indexes $startIndex - $endIndex";
+        $args['title'] =  ( $startIndex == $endIndex )
+                                    ? "Index $startIndex"
+                                    : "Indexes $startIndex - $endIndex";
 
-        $script = ( isset($args['html_parms']['test']) )
-                            ? 'mythtv_test.php'
-                            : 'mythtv_xml.php';
-
-        $parms = http_build_query($args['html_parms']);
-
-        $args = array(
-                'title' => $title,
-                'hdImg' => "$MythRokuDir/images/Mythtv_movie.png",
-                'sdImg' => "$MythRokuDir/images/Mythtv_movie.png",
-                'feed'  => htmlspecialchars("$MythRokuDir/$script?$parms") );
         $xml_output = xml_dir( $args );
     }
 
@@ -144,21 +171,10 @@ function xml_end_dir( $args )
             $endIndex = $args['total_rows'];
         }
 
-        $title = ( $startIndex == $endIndex )
-                                ? "Index $startIndex"
-                                : "Indexes $startIndex - $endIndex";
+        $args['title'] =  ( $startIndex == $endIndex )
+                                    ? "Index $startIndex"
+                                    : "Indexes $startIndex - $endIndex";
 
-        $script = ( isset($args['html_parms']['test']) )
-                            ? 'mythtv_test.php'
-                            : 'mythtv_xml.php';
-
-        $parms = http_build_query($args['html_parms']);
-
-        $args = array(
-                'title' => $title,
-                'hdImg' => "$MythRokuDir/images/Mythtv_movie.png",
-                'sdImg' => "$MythRokuDir/images/Mythtv_movie.png",
-                'feed'  => htmlspecialchars("$MythRokuDir/$script?$parms") );
         $xml_output = xml_dir( $args );
     }
 

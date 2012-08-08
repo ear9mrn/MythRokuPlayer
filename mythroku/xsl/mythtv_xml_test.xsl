@@ -75,7 +75,7 @@
                     <tr>
                         <td colspan="6">
                             <b>Stream Url(s):</b><br/>
-                            <xsl:apply-templates select="media" />
+                            <xsl:apply-templates select="stream" />
                         </td>
                     </tr>
                     <tr><td colspan="6"><b>Synopsis:</b><br/><xsl:value-of select="synopsis" /></td></tr>
@@ -94,9 +94,9 @@
         </xsl:for-each>
     </xsl:template>
 
-    <xsl:template match="media">
-        <xsl:variable name="url" select="streamUrl" />
-        <xsl:value-of select="streamQuality" />: <a href="{$url}"><xsl:copy-of select="$url" /></a><br/>
+    <xsl:template match="stream">
+        <xsl:variable name="url" select="url" />
+        <xsl:value-of select="quality" />: <a href="{$url}"><xsl:copy-of select="$url" /></a><br/>
     </xsl:template>
 
 </xsl:stylesheet>

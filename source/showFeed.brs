@@ -220,12 +220,12 @@ function parse_file( e as object ) as object
     o.SDPosterUrl = validstr(e.sdImg.GetText()      )
 
     for i = 0 to 1
-        s = e.media[i]
-        o.StreamBitrates.Push(  strtoi(  s.streamBitrate.GetText())  )
-        o.StreamUrls.Push(      validstr(s.streamUrl.GetText())      )
-        o.StreamQualities.Push( validstr(s.streamQuality.GetText())  )
-        o.StreamContentIDs.Push(validstr(s.streamContentId.GetText()))
-        o.StreamFormat.Push(    validstr(s.streamFormat.GetText())   )
+        s = e.stream[i]
+        o.StreamBitrates.Push(  strtoi(  s.bitrate.GetText())  )
+        o.StreamUrls.Push(      validstr(s.url.GetText())      )
+        o.StreamQualities.Push( validstr(s.quality.GetText())  )
+        o.StreamContentIDs.Push(validstr(s.contentId.GetText()))
+        o.StreamFormat.Push(    validstr(s.format.GetText())   )
     next i
 
     o.Length             = strtoi(  e.runtime.GetText()   )
@@ -242,12 +242,14 @@ function parse_file( e as object ) as object
     end if
 
     if o.ContentType = "episode" then
-        o.EpisodeNumber = validstr(e.episode.GetText())
+        'NOTE: We do not want to set o.EpisodeNumber otherwise the images will
+        '      not show up in a roPosterScreen (flat-episodic) screen.
+        episode = validstr(e.episode.GetText())
         o.ShortDescriptionLine1 = o.Title + " - " + o.Actors
         if o.Recording then
-            o.ShortDescriptionLine2 = "Episode: " + o.EpisodeNumber + " Recorded: " + o.ReleaseDate
+            o.ShortDescriptionLine2 = "Episode: " + episode + " Recorded: " + o.ReleaseDate
         end if
-        o.Actors = "[" + o.EpisodeNumber + "] " + o.Actors
+        o.Actors = "[" + episode + "] " + o.Actors
     else ' movie
         o.ShortDescriptionLine1 = o.Title
         o.ShortDescriptionLine2 = o.Actors
