@@ -80,7 +80,7 @@ function displayCategoryPosterScreen(category as object) as dynamic
     if validateParam(category, "roAssociativeArray", "displayCategoryPosterScreen") = false return -1
 
     screen = preShowPosterScreen(category.Title, " ")
-    showPosterScreen(screen, category)
+    showCategoryPosterScreen(screen, category)
 
     return 0
 

@@ -642,17 +642,20 @@ End Sub
 '******************************************************
 'Validate parameter is the correct type
 '******************************************************
-Function validateParam(param As Object, paramType As String,functionName As String, allowInvalid = false) As Boolean
-    if type(param) = paramType then
+
+function validateParam( param as object, paramType as string, functionName as string, allowInvalid = false ) as boolean
+
+    if paramType = type(param) then
         return true
-    endif
+    end if
 
-    if allowInvalid = true then
-        if type(param) = invalid then
-            return true
-        endif
-    endif
+    if allowInvalid and invalid = type(param) then
+        return true
+    end if
 
-    print "invalid parameter of type "; type(param); " for "; paramType; " in function "; functionName
+    print "["; functionName "] paramter type mismatch '"; type(param) "' '"; paramType "'"
+
     return false
-End Function
+
+end function
+
