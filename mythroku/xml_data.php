@@ -222,8 +222,8 @@ function build_xml_rec( $db_field, $index )
     $args = array(
         'title'       => html_cleanup($db_field['title']),
         'subtitle'    => html_cleanup($db_field['subtitle']),
-        'hdImg'       => "$WebServer/tv/get_pixmap/" . html_cleanup($hdimg),
-        'sdImg'       => "$WebServer/tv/get_pixmap/" . html_cleanup($sdimg),
+        'hdImg'       => "$WebServer/tv/get_pixmap/" . html_encode($hdimg),
+        'sdImg'       => "$WebServer/tv/get_pixmap/" . html_encode($sdimg),
         'synopsis'    => html_cleanup($db_field['description']),
         'contentType' => $contentType,
         'episode'     => $episode,
@@ -282,8 +282,8 @@ function build_xml_vid( $db_field, $index )
     $args = array(
         'title'       => html_cleanup($db_field['title']),
         'subtitle'    => html_cleanup($db_field['subtitle']),
-        'hdImg'       => "$MythRokuDir/image.php?image=" . html_cleanup($hdimg),
-        'sdImg'       => "$MythRokuDir/image.php?image=" . html_cleanup($sdimg),
+        'hdImg'       => "$MythRokuDir/image.php?image=" . html_encode($hdimg),
+        'sdImg'       => "$MythRokuDir/image.php?image=" . html_encode($sdimg),
         'synopsis'    => html_cleanup($db_field['plot']),
         'contentType' => $contentType,
         'episode'     => $episode,
