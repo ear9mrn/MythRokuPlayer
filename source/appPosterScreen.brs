@@ -123,8 +123,13 @@ function refreshPosterScreen( screen as object, item as object ) as integer
         screen.SetListStyle("arced-landscape")
     end if
 
+    screen.ClearMessage()
     screen.SetContentList( list )
     screen.Show()
+
+    if list.Count() = 0 then
+        screen.ShowMessage( "No results found." )
+    end if
 
 end function
 
