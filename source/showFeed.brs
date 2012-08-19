@@ -179,7 +179,7 @@ function parse_show_feed( xml as object, feed as object ) as void
 
                 feed.ItemList.Push( parse_file(item) )
 
-            else if item@itemType = "dir" then
+            else if item@itemType = "prev" or item@itemType = "next" then
 
                 feed.ItemList.Push( parse_dir(item) )
 
@@ -215,7 +215,6 @@ function parse_file( e as object ) as object
     end if
 
     ' Roku specific attributes
-    o.ContentType = e@contentType
     o.Title       = e@title
     o.Description = e@synopsis
     o.HDPosterUrl = e@hdImg
@@ -243,18 +242,24 @@ function parse_file( e as object ) as object
         o.IsHD = true
     end if
 
-    if o.ContentType = "episode" then
+    if e@contentType = "episode" then
+
         'NOTE: We do not want to set o.EpisodeNumber otherwise the images will
         '      not show up in a roPosterScreen (flat-episodic) screen.
-        episode = e@episode
-        o.ShortDescriptionLine1 = o.Title + " - " + o.Actors
+        'NOTE: We only want to set o.ContentType to "episode" if it is a
+        '      recording. Otherwise, the poster gets stretched to 16x9.
+
+        o.Actors = e@episode + " - " + o.Actors
         if o.Recording then
-            o.ShortDescriptionLine2 = "Episode: " + episode + " Recorded: " + o.ReleaseDate
+            o.ShortDescriptionLine2 = " Recorded: " + o.ReleaseDate
+            o.ContentType = e@contentType
         end if
-        o.Actors = "[" + episode + "] " + o.Actors
-    else ' movie
-        o.ShortDescriptionLine1 = o.Title
-        o.ShortDescriptionLine2 = o.Actors
+
+    end if
+
+    o.ShortDescriptionLine1 = o.Title
+    if o.Actors <> "" then
+        o.ShortDescriptionLine1 = o.ShortDescriptionLine1 + " - " + o.Actors
     end if
 
     return o

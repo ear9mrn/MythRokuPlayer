@@ -40,8 +40,8 @@ function xml_file( $args )
         }
         else
         {
-            $episode = $args['episode']['season'] . ' - ' .
-                       $args['episode']['episode'];
+            $episode = "S{$args['episode']['season']}:" .
+                       "E{$args['episode']['episode']}";
         }
     }
 
@@ -80,7 +80,7 @@ EOF;
 }
 
 # Builds XML for a directory.
-#   Required Args: html_parms and title
+#   Required Args: html_parms, itemType, and title
 function xml_dir( $args )
 {
     require 'settings.php';
@@ -93,7 +93,7 @@ function xml_dir( $args )
     $feed = htmlspecialchars("$MythRokuDir/$script?$parms");
 
     return <<<EOF
-    <item itemType = "dir"
+    <item itemType = "{$args['itemType']}"
           title    = "{$args['title']}"
           hdImg    = "$MythRokuDir/images/Mythtv_movie.png"
           sdImg    = "$MythRokuDir/images/Mythtv_movie.png"
@@ -106,6 +106,11 @@ EOF;
 
 //------------------------------------------------------------------------------
 
+# Creates a puedo directory that advances to the previous set of items in the
+# list.
+#   Required Args:
+#       start_row   => starting index of current subset
+#       html_parms  => $_GET
 function xml_start_dir( $args )
 {
     $xml_output = '';
@@ -114,6 +119,8 @@ function xml_start_dir( $args )
 
     if ( 1 < $args['start_row'] )
     {
+        $args['itemType'] = 'prev';
+
         $startIndex = $args['start_row'] - $ResultLimit;
         if ( 1 > $startIndex )
         {
@@ -133,6 +140,12 @@ function xml_start_dir( $args )
     return $xml_output;
 }
 
+# Creates a puedo directory that advances to the next set of items in the list.
+#   Required Args:
+#       start_row   => starting index of current subset
+#       result_rows => number of items in current subset
+#       total_rows  => total number of entries in the list
+#       html_parms  => $_GET
 function xml_end_dir( $args )
 {
     $xml_output = '';
@@ -142,6 +155,8 @@ function xml_end_dir( $args )
     if ( (0 != $args['total_rows']) &&
          ($args['total_rows'] >= $args['start_row'] + $args['result_rows']) )
     {
+        $args['itemType'] = 'next';
+
         $startIndex = $args['start_row'] + $ResultLimit;
         if ( $args['total_rows'] < $startIndex )
         {

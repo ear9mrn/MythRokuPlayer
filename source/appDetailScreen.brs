@@ -122,8 +122,19 @@ function showDetailScreen( screen as object, prevScreen as object, showList as o
 
                 else if msg.GetIndex() = 8 then
 
-                    screen.Close()
-                    refreshPosterScreen( prevScreen, showList[showIndex] )
+                    conn      = InitShowFeedConnection( showList[showIndex] )
+                    showList  = conn.LoadShowFeed(conn).ItemList
+                    showIndex = showList.Count() - 2
+                    prevScreen.SetContentList( showList )
+                    refreshDetailScreen( screen, showList[showIndex] )
+
+                else if msg.GetIndex() = 9 then
+
+                    conn      = InitShowFeedConnection( showList[showIndex] )
+                    showList  = conn.LoadShowFeed(conn).ItemList
+                    showIndex = 1
+                    prevScreen.SetContentList( showList )
+                    refreshDetailScreen( screen, showList[showIndex] )
 
                 end if
 
@@ -158,11 +169,15 @@ function refreshDetailScreen( screen as object, item as object ) as integer
 
     screen.ClearButtons()
 
-    if "dir" = item.Type then
+    if item.Type = "prev" then
 
         screen.SetStaticRatingEnabled(false)
-
         screen.AddButton( 8, "Show these files" )
+
+    else if item.Type = "next" then
+
+        screen.SetStaticRatingEnabled(false)
+        screen.AddButton( 9, "Show these files" )
 
     else
 

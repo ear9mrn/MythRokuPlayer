@@ -25,7 +25,7 @@
         <h2>Showing: <xsl:value-of select="@resultIndex"/> to <xsl:value-of select="@resultIndex + @resultLength - 1"/> of <xsl:value-of select="@resultTotal"/> files</h2>
         <xsl:for-each select="item">
 
-            <xsl:if test="@itemType = 'dir'">
+            <xsl:if test="@itemType = 'prev' or @itemType = 'next'">
 
                 <b><xsl:value-of select="@title" /></b><br/>
 

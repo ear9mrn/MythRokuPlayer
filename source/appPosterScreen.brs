@@ -82,11 +82,15 @@ function showCategoryPosterScreen( screen as object, category as object ) as int
                 m.curShow = msg.GetIndex()
                 itemlist  = screen.GetContentList()
 
-                if itemlist[m.curShow].Type = "dir" then
+                if itemlist[m.curShow].Type = "prev" then
 
-                    'TODO; Consider setting the focused item to the beginning or
-                    '      end of list based on the directory type.
                     refreshPosterScreen( screen, itemlist[m.curShow] )
+                    screen.SetFocusedListItem( 0 )
+
+                else if itemlist[m.curShow].Type = "next" then
+
+                    refreshPosterScreen( screen, itemlist[m.curShow] )
+                    screen.SetFocusedListItem( -1 )
 
                 else
 
@@ -124,12 +128,14 @@ function refreshPosterScreen( screen as object, item as object ) as integer
     end if
 
     screen.ClearMessage()
-    screen.SetContentList( list )
-    screen.Show()
 
     if list.Count() = 0 then
         screen.ShowMessage( "No results found." )
+    else
+        screen.SetContentList( list )
     end if
+
+    screen.Show()
 
 end function
 
