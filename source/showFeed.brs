@@ -175,21 +175,23 @@ function parse_show_feed( xml as object, feed as object ) as void
 
         if item.GetName() = "item" then
 
-            tmptype = item.itemType.GetText()
+            if item@itemType = "file" then
 
-            if tmptype = "file" then
-                item = parse_file(item)
-            else if tmptype = "dir"  then
-                item = parse_dir(item)
+                feed.ItemList.Push( parse_file(item) )
+
+            else if item@itemType = "dir" then
+
+                feed.ItemList.Push( parse_dir(item) )
+
             else
-                print "[parse_show_feed] unsupported item type: "; tmptype
-            end if
 
-            feed.ItemList.Push(item)
+                print "[parse_show_feed] unsupported item type: "; item@itemType
+
+            end if
 
         else
 
-            print "[parse_show_feed] unsupported item: "; item.GetName()
+            print "[parse_show_feed] unsupported element: "; item.GetName()
 
         end if
 
@@ -205,46 +207,46 @@ function parse_file( e as object ) as object
     o = init_show_feed_file()
 
     ' Other attributes
-    o.Type       = validstr(e.itemType.GetText())
-    o.ContentId  = validstr(e.index.GetText()   )
-    o.DelCommand = validstr(e.delCmd.GetText()  )
+    o.Type       = e@itemType
+    o.ContentId  = e@index
+    o.DelCommand = e@delCmd
     if e.isRecording.GetText() = "true" then
         o.Recording = true
     end if
 
     ' Roku specific attributes
-    o.ContentType = validstr(e.contentType.GetText())
-    o.Title       = validstr(e.title.GetText()      )
-    o.Description = validstr(e.synopsis.GetText()   )
-    o.HDPosterUrl = validstr(e.hdImg.GetText()      )
-    o.SDPosterUrl = validstr(e.sdImg.GetText()      )
+    o.ContentType = e@contentType
+    o.Title       = e@title
+    o.Description = e@synopsis
+    o.HDPosterUrl = e@hdImg
+    o.SDPosterUrl = e@sdImg
 
     for i = 0 to 1
         s = e.stream[i]
-        o.StreamBitrates.Push(  strtoi(  s.bitrate.GetText())  )
-        o.StreamUrls.Push(      validstr(s.url.GetText())      )
-        o.StreamQualities.Push( validstr(s.quality.GetText())  )
-        o.StreamContentIDs.Push(validstr(s.contentId.GetText()))
-        o.StreamFormat.Push(    validstr(s.format.GetText())   )
+        o.StreamBitrates.Push(  strtoi(s@bitrate) )
+        o.StreamUrls.Push(      s@url             )
+        o.StreamQualities.Push( s@quality         )
+        o.StreamContentIDs.Push(s@contentId       )
+        o.StreamFormat.Push(    s@format          )
     next i
 
-    o.Length             = strtoi(  e.runtime.GetText()   )
-'   o.BookmarkPosition   = strtoi(  e..GetText()          )
-    o.ReleaseDate        = validstr(e.date.GetText()      )
-    o.Rating             = validstr(e.rating.GetText()    )
-    o.StarRating         = strtoi(  e.starRating.GetText())
+    o.Length             = strtoi(e@runtime)
+'   o.BookmarkPosition   = strtoi(e@)
+    o.ReleaseDate        = e@date
+    o.Rating             = e@rating
+    o.StarRating         = strtoi(e@starRating)
 
-    o.Actors     = validstr(e.subtitle.GetText())
-'   o.Director   = validstr(e..GetText()        )
-    o.Categories = validstr(e.genres.GetText()  )
-    if e.isHD.GetText() = "true" then
+    o.Actors     = e@subtitle
+'   o.Director   = e@
+    o.Categories = e@genres
+    if e@isHD = "true" then
         o.IsHD = true
     end if
 
     if o.ContentType = "episode" then
         'NOTE: We do not want to set o.EpisodeNumber otherwise the images will
         '      not show up in a roPosterScreen (flat-episodic) screen.
-        episode = validstr(e.episode.GetText())
+        episode = e@episode
         o.ShortDescriptionLine1 = o.Title + " - " + o.Actors
         if o.Recording then
             o.ShortDescriptionLine2 = "Episode: " + episode + " Recorded: " + o.ReleaseDate
@@ -266,12 +268,12 @@ function parse_dir( e as object ) as object
 
     o = init_show_feed_dir()
 
-    o.Type  = validstr(e.itemType.GetText())
-    o.Feed  = validstr(e.feed.GetText()    )
-    o.Title = validstr(e.title.GetText()   )
+    o.Type  = e@itemType
+    o.Feed  = e@feed
+    o.Title = e@title
 
-    o.HDPosterUrl = validstr(e.hdImg.GetText())
-    o.SDPosterUrl = validstr(e.sdImg.GetText())
+    o.HDPosterUrl = e@hdImg
+    o.SDPosterUrl = e@sdImg
 
     o.ShortDescriptionLine1 = o.Title
 

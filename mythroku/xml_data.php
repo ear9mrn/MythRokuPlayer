@@ -13,7 +13,7 @@ function get_xml_data()
     switch ( $type )
     {
         case 'vid': case 'rec': break;
-        default: die( "Invalid parameter: [type]=[$type]\n" );
+        default: die( "Invalid parameter: [type]=[$type]" );
     }
 
     $sort = 'title'; // default
@@ -42,6 +42,7 @@ function get_xml_data()
 
     // Check boundry limits
     $total_rows = mysql_num_rows( $sql_result );
+    if ( !$total_rows ) { $total_rows = 0; } // In case it returns false
     if ( $total_rows < $start_row )
     {
         $start_row = $total_rows;
@@ -59,6 +60,7 @@ function get_xml_data()
 
     // Get the subset result count
     $result_rows = mysql_num_rows( $sql_result );
+    if ( !$result_rows ) { $result_rows = 0; } // In case it returns false
 
     // Start XML feed
     $args = array( 'start_row'   => $start_row,
@@ -108,7 +110,6 @@ function build_sql( $type, $sort )
 
 function build_sql_rec( $sort )
 {
-print "rec";
     // Start building SQL query
     $SQL  = "SELECT * FROM recorded ";
     $SQL .= "INNER JOIN recordedprogram USING (programid)";

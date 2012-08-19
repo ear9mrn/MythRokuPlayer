@@ -5,10 +5,10 @@ function xml_start_feed( $args )
     return <<<EOF
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 
-<feed listType="{$args['list_type']}"
-      resultTotal="{$args['total_rows']}"
-      resultIndex="{$args['start_row']}"
-      resultLength="{$args['result_rows']}">
+<feed listType     = "{$args['list_type']}"
+      resultTotal  = "{$args['total_rows']}"
+      resultIndex  = "{$args['start_row']}"
+      resultLength = "{$args['result_rows']}">
 
 
 EOF;
@@ -31,22 +31,9 @@ function xml_file( $args )
 {
     $genre_str = implode( ", ", $args['genres'] );
 
-    $xml = <<<EOF
-    <item>
-        <itemType>file</itemType>
-        <index>{$args['index']}</index>
-        <title>{$args['title']}</title>
-        <subtitle>{$args['subtitle']}</subtitle>
-        <hdImg>{$args['hdImg']}</hdImg>
-        <sdImg>{$args['sdImg']}</sdImg>
-        <synopsis>{$args['synopsis']}</synopsis>
-        <contentType>{$args['contentType']}</contentType>
-
-EOF;
-
+    $episode = '';
     if ( 'episode' == $args['contentType'] )
     {
-        $episode = '';
         if ( $args['episode']['legacy'] )
         {
             $episode = $args['episode']['legacy'];
@@ -56,42 +43,40 @@ EOF;
             $episode = $args['episode']['season'] . ' - ' .
                        $args['episode']['episode'];
         }
-
-            $xml .= <<<EOF
-        <episode>$episode</episode>
-
-EOF;
-
     }
 
-    $xml .= <<<EOF
-        <genres>$genre_str</genres>
-        <runtime>{$args['runtime']}</runtime>
-        <date>{$args['date']}</date>
-        <starRating>{$args['starRating']}</starRating>
-        <rating>{$args['rating']}</rating>
-        <isRecording>{$args['isRecording']}</isRecording>
-        <delCmd>{$args['delCmd']}</delCmd>
-        <stream>
-            <bitrate>{$args['hdStream']['bitrate']}</bitrate>
-            <url>{$args['hdStream']['url']}</url>
-            <quality>HD</quality>
-            <contentId>{$args['hdStream']['contentId']}</contentId>
-            <format>{$args['hdStream']['format']}</format>
-        </stream>
-        <stream>
-            <bitrate>{$args['sdStream']['bitrate']}</bitrate>
-            <url>{$args['sdStream']['url']}</url>
-            <quality>SD</quality>
-            <contentId>{$args['sdStream']['contentId']}</contentId>
-            <format>{$args['sdStream']['format']}</format>
-        </stream>
+    return <<<EOF
+    <item itemType    = "file"
+          index       = "{$args['index']}"
+          title       = "{$args['title']}"
+          subtitle    = "{$args['subtitle']}"
+          hdImg       = "{$args['hdImg']}"
+          sdImg       = "{$args['sdImg']}"
+          synopsis    = "{$args['synopsis']}"
+          contentType = "{$args['contentType']}"
+          episode     = "$episode"
+          genres      = "$genre_str"
+          runtime     = "{$args['runtime']}"
+          date        = "{$args['date']}"
+          starRating  = "{$args['starRating']}"
+          rating      = "{$args['rating']}"
+          isRecording = "{$args['isRecording']}"
+          delCmd      = "{$args['delCmd']}" >
+        <stream bitrate   = "{$args['hdStream']['bitrate']}"
+                url       = "{$args['hdStream']['url']}"
+                quality   = "HD"
+                contentId = "{$args['hdStream']['contentId']}"
+                format    = "{$args['hdStream']['format']}" />
+        <stream bitrate   = "{$args['sdStream']['bitrate']}"
+                url       = "{$args['sdStream']['url']}"
+                quality   = "SD"
+                contentId = "{$args['sdStream']['contentId']}"
+                format    = "{$args['sdStream']['format']}" />
     </item>
 
 
 EOF;
 
-    return $xml;
 }
 
 # Builds XML for a directory.
@@ -108,13 +93,11 @@ function xml_dir( $args )
     $feed = htmlspecialchars("$MythRokuDir/$script?$parms");
 
     return <<<EOF
-    <item>
-        <itemType>dir</itemType>
-        <title>{$args['title']}</title>
-        <hdImg>$MythRokuDir/images/Mythtv_movie.png</hdImg>
-        <sdImg>$MythRokuDir/images/Mythtv_movie.png</sdImg>
-        <feed>$feed</feed>
-    </item>
+    <item itemType = "dir"
+          title    = "{$args['title']}"
+          hdImg    = "$MythRokuDir/images/Mythtv_movie.png"
+          sdImg    = "$MythRokuDir/images/Mythtv_movie.png"
+          feed     = "$feed" />
 
 
 EOF;
@@ -156,7 +139,8 @@ function xml_end_dir( $args )
 
     require 'settings.php';
 
-    if ( $args['total_rows'] >= $args['start_row'] + $args['result_rows'] )
+    if ( (0 != $args['total_rows']) &&
+         ($args['total_rows'] >= $args['start_row'] + $args['result_rows']) )
     {
         $startIndex = $args['start_row'] + $ResultLimit;
         if ( $args['total_rows'] < $startIndex )
