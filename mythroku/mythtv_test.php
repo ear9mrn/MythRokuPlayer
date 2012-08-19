@@ -1,6 +1,6 @@
 <?php
     if ( isset($_GET['type']) and
-         ($_GET['type'] == 'vid' or $_GET['type'] == 'rec') )
+         ( 'vid' == $_GET['type'] or 'rec' == $_GET['type'] ) )
     {
         $_GET['test'] = '';
         include 'xml_data.php';

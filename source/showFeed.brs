@@ -175,17 +175,19 @@ function parse_show_feed( xml as object, feed as object ) as void
 
         if item.GetName() = "item" then
 
-            if item@itemType = "file" then
+            tmptype = item@itemType
+
+            if tmptype = "file" then
 
                 feed.ItemList.Push( parse_file(item) )
 
-            else if item@itemType = "prev" or item@itemType = "next" then
+            else if tmptype = "prev" or tmptype = "next" then
 
                 feed.ItemList.Push( parse_dir(item) )
 
             else
 
-                print "[parse_show_feed] unsupported item type: "; item@itemType
+                print "[parse_show_feed] unsupported item type: "; tmptype
 
             end if
 

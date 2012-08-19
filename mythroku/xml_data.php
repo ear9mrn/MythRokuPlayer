@@ -8,25 +8,7 @@ function get_xml_data()
     require 'xml_utils.php';
 
     // Get any parameters from $_GET
-    $type = '';
-    if ( isset($_GET['type']) ) { $type = $_GET['type']; }
-    switch ( $type )
-    {
-        case 'vid': case 'rec': break;
-        default: die( "Invalid parameter: [type]=[$type]" );
-    }
-
-    $sort = 'title'; // default
-    if ( isset($_GET['sort']) ) { $sort = $_GET['sort']; }
-
-    $start_row = 1;
-    if ( isset($_GET['index']) and (0 < $_GET['index']) )
-    {
-        $start_row = $_GET['index'];
-    }
-
-    $test = false;
-    if ( isset($_GET['test']) ) { $test = true; }
+    parse_parms();
 
     // Make a connection to the mySQL server
     $db_handle = mysql_connect($MysqlServer, $MythTVdbuser, $MythTVdbpass);
@@ -37,22 +19,21 @@ function get_xml_data()
     }
 
     // Query SQL database
-    $sql_query  = build_sql( $type, $sort );
+    $sql_query  = build_sql();
     $sql_result = mysql_query( $sql_query );
 
     // Check boundry limits
     $total_rows = mysql_num_rows( $sql_result );
     if ( !$total_rows ) { $total_rows = 0; } // In case it returns false
-    if ( $total_rows < $start_row )
+    if ( $total_rows < $_GET['index'] )
     {
-        $start_row = $total_rows;
-        $_GET['index'] = $start_row;
+        $_GET['index'] = $total_rows;
     }
 
     // Limit the number results
     if ( 0 != $ResultLimit )
     {
-        $sql_query .= " LIMIT " . ($start_row - 1) . ", $ResultLimit";
+        $sql_query .= " LIMIT " . ($_GET['index'] - 1) . ", $ResultLimit";
 
         // Get the subset results
         $sql_result = mysql_query($sql_query);
@@ -63,22 +44,22 @@ function get_xml_data()
     if ( !$result_rows ) { $result_rows = 0; } // In case it returns false
 
     // Start XML feed
-    $args = array( 'start_row'   => $start_row,
+    $args = array( 'start_row'   => $_GET['index'],
                    'result_rows' => $result_rows,
                    'total_rows'  => $total_rows,
-                   'list_type'   => $type );
+                   'list_type'   => $_GET['type'] );
     $xml .= xml_start_feed( $args );
 
     // Print 'previous' pueso-directory
-    $args = array( 'start_row'  => $start_row,
+    $args = array( 'start_row'  => $_GET['index'],
                    'html_parms' => $_GET );
     $xml .= xml_start_dir( $args );
 
     // Get XML data for each file in this query.
-    $xml .= build_xml( $sql_result, $type, $start_row );
+    $xml .= build_xml( $sql_result );
 
     // Print 'next' pueso-directory
-    $args = array( 'start_row'   => $start_row,
+    $args = array( 'start_row'   => $_GET['index'],
                    'result_rows' => $result_rows,
                    'total_rows'  => $total_rows,
                    'html_parms'  => $_GET );
@@ -94,21 +75,50 @@ function get_xml_data()
 }
 
 //------------------------------------------------------------------------------
+// Parse parameters
+//------------------------------------------------------------------------------
+
+function parse_parms()
+{
+    // type
+    switch ( $_GET['type'] )
+    {
+        case 'rec': case 'vid': break;
+        default: die( "Invalid parameter: [type]=[${_GET['type']}]" );
+    }
+
+    // sort
+    if ( !isset($_GET['sort']) )
+    {
+        $_GET['sort'] = 'title'; // Default
+    }
+
+    // index
+    if ( !isset($_GET['index']) or (1 > $_GET['index']) )
+    {
+        $_GET['index'] = 1; // Default
+    }
+
+    // test
+    // Nothing to do so far.
+}
+
+//------------------------------------------------------------------------------
 // Build SQL queries
 //------------------------------------------------------------------------------
 
-function build_sql( $type, $sort )
+function build_sql()
 {
-    switch ( $type )
+    switch ( $_GET['type'] )
     {
-        case 'rec': return build_sql_rec( $sort );
-        case 'vid': return build_sql_vid( $sort );
+        case 'rec': return build_sql_rec();
+        case 'vid': return build_sql_vid();
     }
 }
 
 //------------------------------------------------------------------------------
 
-function build_sql_rec( $sort )
+function build_sql_rec()
 {
     // Start building SQL query
     $SQL  = "SELECT * FROM recorded ";
@@ -120,7 +130,7 @@ function build_sql_rec( $sort )
     $SQL .=      " OR basename LIKE '%.mov' )";
 
     // Add sorting
-    switch ( $sort )
+    switch ( $_GET['sort'] )
     {
         case 'title':    $SQL .= " ORDER BY recorded.title ASC";                     break;
         case 'date':     $SQL .= " ORDER BY recorded.starttime, recorded.title ASC"; break;
@@ -134,7 +144,7 @@ function build_sql_rec( $sort )
 
 //------------------------------------------------------------------------------
 
-function build_sql_vid( $sort )
+function build_sql_vid()
 {
     // Start building SQL query
     $SQL = "SELECT * FROM videometadata";
@@ -145,7 +155,7 @@ function build_sql_vid( $sort )
     $SQL .=      " OR filename LIKE '%.mov' )";
 
     // Add sorting
-    switch ( $sort )
+    switch ( $_GET['sort'] )
     {
         case 'title': $SQL .= " ORDER BY title ASC";              break;
         case 'date':  $SQL .= " ORDER BY releasedate, title ASC"; break;
@@ -159,13 +169,15 @@ function build_sql_vid( $sort )
 // Build XML
 //------------------------------------------------------------------------------
 
-function build_xml( $sql_result, $type, $index )
+function build_xml( $sql_result )
 {
     $xml = '';
 
+    $index = $_GET['index'];
+
     while ( $db_field = mysql_fetch_assoc($sql_result) )
     {
-        switch ( $type )
+        switch ( $_GET['type'] )
         {
             case 'rec': $xml .= build_xml_rec( $db_field, $index ); break;
             case 'vid': $xml .= build_xml_vid( $db_field, $index ); break;
