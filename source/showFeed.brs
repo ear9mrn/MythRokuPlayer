@@ -24,9 +24,6 @@ function InitShowFeedConnection(category as object) as object
     conn.LoadShowFeed    = load_show_feed
     conn.ParseShowFeed   = parse_show_feed
 
-    print "[InitShowFeedConnection] Created feed connection:"
-    print "    " + conn.UrlShowFeed
-
     return conn
 
 end function
@@ -127,6 +124,8 @@ function load_show_feed( conn as object ) as dynamic
 
     if validateParam(conn, "roAssociativeArray", "load_show_feed") = false return invalid
 
+    print "BEGIN load_show_feed -----------------------------------------------"
+
     print "url: " + conn.UrlShowFeed
     http = NewHttp(conn.UrlShowFeed)
 
@@ -155,6 +154,8 @@ function load_show_feed( conn as object ) as dynamic
     m.ParseShowFeed(xml, feed)
     print "Show Feed Parse Took : " + itostr(m.Timer.TotalMilliseconds())
 
+    print "END load_show_feed -------------------------------------------------"
+
     return feed
 
 end function
@@ -181,7 +182,7 @@ function parse_show_feed( xml as object, feed as object ) as void
 
                 feed.ItemList.Push( parse_file(item) )
 
-            else if tmptype = "prev" or tmptype = "next" then
+            else if tmptype = "prev" or tmptype = "next" or tmptype = "dir" then
 
                 feed.ItemList.Push( parse_dir(item) )
 
@@ -217,6 +218,7 @@ function parse_file( e as object ) as object
     end if
 
     ' Roku specific attributes
+    o.ContentType = e@contentType
     o.Title       = e@title
     o.Description = e@synopsis
     o.HDPosterUrl = e@hdImg
@@ -244,18 +246,26 @@ function parse_file( e as object ) as object
         o.IsHD = true
     end if
 
-    if e@contentType = "episode" then
+    if o.ContentType = "episode" then
 
         'NOTE: We do not want to set o.EpisodeNumber otherwise the images will
         '      not show up in a roPosterScreen (flat-episodic) screen.
-        'NOTE: We only want to set o.ContentType to "episode" if it is a
-        '      recording. Otherwise, the poster gets stretched to 16x9.
 
-        o.Actors = e@episode + " - " + o.Actors
+        if "" = o.Actors then
+            o.Actors = e@episode
+        else  if "" <> e@episode then
+            o.Actors = e@episode + " - " + o.Actors
+        end if
+
         if o.Recording then
             o.ShortDescriptionLine2 = " Recorded: " + o.ReleaseDate
-            o.ContentType = e@contentType
         end if
+
+    else if o.Recording then
+
+        'NOTE: Set o.ContentType to "episode" for all recordings. Otherwise,
+        '      this will give us 16x9 images
+        o.ContentType = "episode"
 
     end if
 

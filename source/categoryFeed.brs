@@ -53,6 +53,8 @@ end function
 '******************************************************************
 function load_category_feed(conn as object) as dynamic
 
+    print "BEGIN load_category_feed -------------------------------------------"
+
     http = NewHttp(conn.UrlCategoryFeed)
 
     Dbg("url: ", http.Http.GetUrl())
@@ -111,6 +113,8 @@ function load_category_feed(conn as object) as dynamic
     o.SDPosterURL = "pkg:/images/Mythtv_settings.png"
     o.HDPosterURL = "pkg:/images/Mythtv_settings.png"
     topNode.AddKid(o)
+
+    print "END load_category_feed ---------------------------------------------"
 
     return topNode
 

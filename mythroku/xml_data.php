@@ -1,5 +1,10 @@
 <?php
 
+include 'sort_utils.php';
+
+$g_isDbVer25 = false;
+$g_vidGenres = array();
+
 function get_xml_data()
 {
     $xml = '';
@@ -18,13 +23,23 @@ function get_xml_data()
         die( 'Database NOT found: ' . mysql_error() );
     }
 
-    // Query SQL database
+    // Populate the global variables
+    // The intent is to query the database for this data only once instead of
+    // for each file.
+    $GLOBALS['g_isDbVer25'] = isDbVer25();
+    if ( 'vid' == $_GET['type'] )
+    {
+        $GLOBALS['g_vidGenres'] = getVidGenres();
+    }
+
+    // Query SQL database and get data array.
     $sql_query  = build_sql();
     $sql_result = mysql_query( $sql_query );
+    $data_array = build_data_array( $sql_result );
+    sort_data_array( $data_array, $_GET['sort'] );
 
     // Check boundry limits
-    $total_rows = mysql_num_rows( $sql_result );
-    if ( !$total_rows ) { $total_rows = 0; } // In case it returns false
+    $total_rows = count( $data_array );
     if ( $total_rows < $_GET['index'] )
     {
         $_GET['index'] = $total_rows;
@@ -33,15 +48,12 @@ function get_xml_data()
     // Limit the number results
     if ( 0 != $ResultLimit )
     {
-        $sql_query .= " LIMIT " . ($_GET['index'] - 1) . ", $ResultLimit";
-
-        // Get the subset results
-        $sql_result = mysql_query($sql_query);
+        $data_array = array_slice( $data_array, $_GET['index']-1,
+                                   $ResultLimit );
     }
 
     // Get the subset result count
-    $result_rows = mysql_num_rows( $sql_result );
-    if ( !$result_rows ) { $result_rows = 0; } // In case it returns false
+    $result_rows = count( $data_array );
 
     // Start XML feed
     $args = array( 'start_row'   => $_GET['index'],
@@ -55,8 +67,18 @@ function get_xml_data()
                    'html_parms' => $_GET );
     $xml .= xml_start_dir( $args );
 
-    // Get XML data for each file in this query.
-    $xml .= build_xml( $sql_result );
+    // Translate all items into xml
+    $index = $_GET['index'];
+    foreach ( $data_array as $key => $data )
+    {
+        $data['index'] = $index;
+        switch ( $data['itemType'] )
+        {
+            case 'file': $xml .= xml_file( $data ); break;
+            case 'dir':  $xml .= xml_dir(  $data ); break;
+        }
+        $index++;
+    }
 
     // Print 'next' pueso-directory
     $args = array( 'start_row'   => $_GET['index'],
@@ -88,10 +110,25 @@ function parse_parms()
     }
 
     // sort
-    if ( !isset($_GET['sort']) )
+    $sort = array();
+    if ( isset($_GET['sort']['type']) )
     {
-        $_GET['sort'] = 'title'; // Default
+        $sort['type'] = $_GET['sort']['type'];
+
+        switch ( $sort['type'] )
+        {
+            case 'series':
+                $sort['path']    = $_GET['sort']['path'];
+                $sort['season']  = $_GET['sort']['season'];
+                $sort['legacy']  = $_GET['sort']['legacy'];
+                break;
+        }
     }
+    else
+    {
+        $sort['type'] = 'title'; // Default
+    }
+    $_GET['sort'] = $sort;
 
     // index
     if ( !isset($_GET['index']) or (1 > $_GET['index']) )
@@ -129,8 +166,14 @@ function build_sql_rec()
     $SQL .=      " OR basename LIKE '%.m4v'";
     $SQL .=      " OR basename LIKE '%.mov' )";
 
+    // Filter for a single series, if needed.
+    if ( 'series' == $_GET['sort']['type'] )
+    {
+        $SQL .= " AND recorded.title = '{$_GET['sort']['path']}'";
+    }
+
     // Add sorting
-    switch ( $_GET['sort'] )
+    switch ( $_GET['sort']['type'] )
     {
         case 'title':    $SQL .= " ORDER BY recorded.title ASC";                     break;
         case 'date':     $SQL .= " ORDER BY recorded.starttime, recorded.title ASC"; break;
@@ -154,8 +197,15 @@ function build_sql_vid()
     $SQL .=      " OR filename LIKE '%.m4v'";
     $SQL .=      " OR filename LIKE '%.mov' )";
 
+    // Filter for a single series, if needed.
+    if ( 'series' == $_GET['sort']['type'] )
+    {
+        $SQL .= " AND contenttype = 'TELEVISION'";
+        $SQL .= " AND title       = '{$_GET['sort']['path']}'";
+    }
+
     // Add sorting
-    switch ( $_GET['sort'] )
+    switch ( $_GET['sort']['type'] )
     {
         case 'title': $SQL .= " ORDER BY title ASC";              break;
         case 'date':  $SQL .= " ORDER BY releasedate, title ASC"; break;
@@ -166,32 +216,66 @@ function build_sql_vid()
 }
 
 //------------------------------------------------------------------------------
-// Build XML
+// Build data array
 //------------------------------------------------------------------------------
 
-function build_xml( $sql_result )
+function build_data_array( $sql_result )
 {
-    $xml = '';
-
-    $index = $_GET['index'];
+    $data_array = array();
 
     while ( $db_field = mysql_fetch_assoc($sql_result) )
     {
+        $data = array();
+
         switch ( $_GET['type'] )
         {
-            case 'rec': $xml .= build_xml_rec( $db_field, $index ); break;
-            case 'vid': $xml .= build_xml_vid( $db_field, $index ); break;
+            case 'rec': $data = build_data_array_rec( $db_field ); break;
+            case 'vid': $data = build_data_array_vid( $db_field ); break;
         }
 
-        $index++;
+        // If the sort type is 'series' then the list should only contain files
+        // in that serires.
+        if ( 'series' == $_GET['sort']['type'] )
+        {
+            array_push( $data_array, $data );
+        }
+        else
+        {
+            if ( 'episode' == $data['contentType'] )
+            {
+                // Add a directory for this series if it does not already exist.
+                $title = $data['title'];
+                if ( !isset($data_array[$title]) )
+                {
+                    $dir = array( 'itemType'   => 'dir',
+                                  'title'      => $title,
+                                  'html_parms' => $_GET,
+                                  'hdImg'      => $data['hdImgs']['poster'],
+                                  'sdImg'      => $data['sdImgs']['poster'], );
+
+                    $dir['html_parms']['index'] = 1;
+
+                    $sort = array( 'type' => 'series',
+                                   'path' => $title );
+
+                    $dir['html_parms']['sort'] = $sort;
+
+                    $data_array[$title] = $dir;
+                }
+            }
+            else
+            {
+                array_push( $data_array, $data );
+            }
+        }
     }
 
-    return $xml;
+    return $data_array;
 }
 
 //------------------------------------------------------------------------------
 
-function build_xml_rec( $db_field, $index )
+function build_data_array_rec( $db_field )
 {
     require 'settings.php';
 
@@ -208,20 +292,24 @@ function build_xml_rec( $db_field, $index )
     {
         $contentType = 'episode';
 
-        if ( isDbVer25() )
+        $episode['season']  = 0;
+        $episode['episode'] = 0;
+        $episode['legacy']  = $db_field['syndicatedepisodenumber'];
+
+        if ( $GLOBALS['g_isDbVer25']  and
+             0 < $db_field['season']  and
+             0 < $db_field['episode'] )
         {
             $episode['season']  = $db_field['season'];
             $episode['episode'] = $db_field['episode'];
         }
-        else
-        {
-            $episode['legacy'] = $db_field['syndicatedepisodenumber'];
-        }
     }
 
-    $img  = "{$db_field['hostname']}/$chanid_strtime";
-    $hdimg = "$img/100/56/-1/$filename.100x56x-1.png";
-    $sdimg = "$img/100/75/-1/$filename.100x75x-1.png";
+    $poster_path = "$MythRokuDir/images/";
+    $img_script  = "$MythRokuDir/image.php?image=";
+    $imgs = array();
+    $imgs['poster'] = $poster_path . html_encode("Mythtv_movie.png");
+    $imgs['screen'] = $img_script  . html_encode("$filename.png");
 
     $stream = array(
         'bitrate'   => 0,
@@ -232,11 +320,12 @@ function build_xml_rec( $db_field, $index )
 
     // TODO: You can find the TV rating in table 'recordedrating'
 
-    $args = array(
+    $data = array(
+        'itemType'    => 'file',
         'title'       => html_cleanup($db_field['title']),
         'subtitle'    => html_cleanup($db_field['subtitle']),
-        'hdImg'       => "$WebServer/tv/get_pixmap/" . html_encode($hdimg),
-        'sdImg'       => "$WebServer/tv/get_pixmap/" . html_encode($sdimg),
+        'hdImgs'      => $imgs,
+        'sdImgs'      => $imgs,
         'synopsis'    => html_cleanup($db_field['description']),
         'contentType' => $contentType,
         'episode'     => $episode,
@@ -245,19 +334,18 @@ function build_xml_rec( $db_field, $index )
         'date'        => date("m/d/Y h:ia", $str_time),
         'starRating'  => 0,
         'rating'      => '',
-        'index'       => $index,
         'isRecording' => 'true',
         'delCmd'      => "$MythRokuDir/mythtv_tv_del.php?basename=" . html_encode($filename),
         'hdStream'    => $stream,
         'sdStream'    => $stream,
     );
 
-    return xml_file( $args );
+    return $data;
 }
 
 //------------------------------------------------------------------------------
 
-function build_xml_vid( $db_field, $index )
+function build_data_array_vid( $db_field )
 {
     require 'settings.php';
 
@@ -272,18 +360,12 @@ function build_xml_vid( $db_field, $index )
         $episode['episode'] = $db_field['episode'];
     }
 
-    $hdimg = html_encode($db_field['coverfile']);
-    $sdimg = $hdimg;
-
-    $SQL  = "SELECT * FROM videometadatagenre, videogenre ";
-    $SQL .= "WHERE videometadatagenre.idgenre = videogenre.intid ";
-    $SQL .= "AND idvideo='{$db_field['intid']}'";
-    $genre_result = mysql_query($SQL);
-    $genre_arr = array();
-    while ( $genres = mysql_fetch_assoc($genre_result) )
-    {
-        array_push( $genre_arr, html_cleanup($genres['genre']) );
-    }
+    $img_script = "$MythRokuDir/image.php?image=";
+    $imgs = array();
+    $imgs['poster'] = $img_script . html_encode($db_field['coverfile']);
+    $imgs['screen'] = ( 'movie' == $contentType )
+                          ? $imgs['poster']
+                          : $img_script . html_encode($db_field['screenshot']);
 
     $stream = array(
         'bitrate'   => 0,
@@ -292,27 +374,27 @@ function build_xml_vid( $db_field, $index )
         'format'    => pathinfo($filename, PATINFO_EXTENSION),
     );
 
-    $args = array(
+    $data = array(
+        'itemType'    => 'file',
         'title'       => html_cleanup($db_field['title']),
         'subtitle'    => html_cleanup($db_field['subtitle']),
-        'hdImg'       => "$MythRokuDir/image.php?image=" . html_encode($hdimg),
-        'sdImg'       => "$MythRokuDir/image.php?image=" . html_encode($sdimg),
+        'hdImgs'      => $imgs,
+        'sdImgs'      => $imgs,
         'synopsis'    => html_cleanup($db_field['plot']),
         'contentType' => $contentType,
         'episode'     => $episode,
-        'genres'      => $genre_arr,
+        'genres'      => $GLOBALS['g_vidGenres'][$db_field['intid']],
         'runtime'     => $db_field['length'] * 60,
         'date'        => date("m/d/Y", convert_date($db_field['releasedate'])),
         'starRating'  => $db_field['userrating'] * 10,
         'rating'      => $db_field['rating'],
-        'index'       => $index,
         'isRecording' => 'false',
         'delCmd'      => '',
         'hdStream'    => $stream,
         'sdStream'    => $stream,
     );
 
-    return xml_file( $args );
+    return $data;
 }
 
 //------------------------------------------------------------------------------
@@ -381,5 +463,25 @@ function isDbVer25()
 }
 
 //------------------------------------------------------------------------------
+
+function getVidGenres()
+{
+    $genre_arr = array();
+
+    $SQL  = "SELECT idvideo, genre FROM videometadatagenre, videogenre ";
+    $SQL .= "WHERE videometadatagenre.idgenre = videogenre.intid ";
+    $genre_result = mysql_query($SQL);
+
+    while ( $db_field = mysql_fetch_assoc($genre_result) )
+    {
+        $idvideo = $db_field['idvideo'];
+        $genre   = $db_field['genre'];
+
+        if ( !$genre_arr[$idvideo] ) { $genre_arr[$idvideo] = array(); }
+        array_push( $genre_arr[$idvideo], $genre );
+    }
+
+    return $genre_arr;
+}
 
 ?>

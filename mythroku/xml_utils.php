@@ -34,24 +34,24 @@ function xml_file( $args )
     $episode = '';
     if ( 'episode' == $args['contentType'] )
     {
-        if ( $args['episode']['legacy'] )
-        {
-            $episode = $args['episode']['legacy'];
-        }
-        else
+        if ( 0 < $args['episode']['season'] && 0 < $args['episode']['episode'] )
         {
             $episode = "S{$args['episode']['season']}:" .
                        "E{$args['episode']['episode']}";
         }
+        else
+        {
+            $episode = $args['episode']['legacy'];
+        }
     }
 
     return <<<EOF
-    <item itemType    = "file"
+    <item itemType    = "{$args['itemType']}"
           index       = "{$args['index']}"
           title       = "{$args['title']}"
           subtitle    = "{$args['subtitle']}"
-          hdImg       = "{$args['hdImg']}"
-          sdImg       = "{$args['sdImg']}"
+          hdImg       = "{$args['hdImgs']['screen']}"
+          sdImg       = "{$args['sdImgs']['screen']}"
           synopsis    = "{$args['synopsis']}"
           contentType = "{$args['contentType']}"
           episode     = "$episode"
@@ -80,7 +80,7 @@ EOF;
 }
 
 # Builds XML for a directory.
-#   Required Args: html_parms, itemType, and title
+#   Required Args: html_parms, itemType, title, hdImg, and sdImg
 function xml_dir( $args )
 {
     require 'settings.php';
@@ -94,9 +94,10 @@ function xml_dir( $args )
 
     return <<<EOF
     <item itemType = "{$args['itemType']}"
+          index    = "{$args['index']}"
           title    = "{$args['title']}"
-          hdImg    = "$MythRokuDir/images/Mythtv_movie.png"
-          sdImg    = "$MythRokuDir/images/Mythtv_movie.png"
+          hdImg    = "{$args['hdImg']}"
+          sdImg    = "{$args['sdImg']}"
           feed     = "$feed" />
 
 
@@ -133,6 +134,9 @@ function xml_start_dir( $args )
         $args['title'] =  ( $startIndex == $endIndex )
                                     ? "Index $startIndex"
                                     : "Indexes $startIndex - $endIndex";
+
+        $args['hdImg'] = "$MythRokuDir/images/Mythtv_movie.png";
+        $args['sdImg'] = "$MythRokuDir/images/Mythtv_movie.png";
 
         $xml_output = xml_dir( $args );
     }
@@ -173,6 +177,9 @@ function xml_end_dir( $args )
         $args['title'] =  ( $startIndex == $endIndex )
                                     ? "Index $startIndex"
                                     : "Indexes $startIndex - $endIndex";
+
+        $args['hdImg'] = "$MythRokuDir/images/Mythtv_movie.png";
+        $args['sdImg'] = "$MythRokuDir/images/Mythtv_movie.png";
 
         $xml_output = xml_dir( $args );
     }

@@ -81,16 +81,22 @@ function showCategoryPosterScreen( screen as object, category as object ) as int
 
                 m.curShow = msg.GetIndex()
                 itemlist  = screen.GetContentList()
+                curItem = itemlist[m.curShow]
 
-                if itemlist[m.curShow].Type = "prev" then
+                if curItem.Type = "prev" then
 
-                    refreshPosterScreen( screen, itemlist[m.curShow] )
+                    refreshPosterScreen( screen, curItem )
                     screen.SetFocusedListItem( 0 )
 
-                else if itemlist[m.curShow].Type = "next" then
+                else if curItem.Type = "next" then
 
-                    refreshPosterScreen( screen, itemlist[m.curShow] )
+                    refreshPosterScreen( screen, curItem )
                     screen.SetFocusedListItem( -1 )
+
+                else if ( curItem.Type = "dir" ) then
+
+                    newScreen = preShowPosterScreen( curItem.Title, category.Title )
+                    showDirectoryPosterScreen( newScreen, curItem )
 
                 else
 
@@ -99,6 +105,79 @@ function showCategoryPosterScreen( screen as object, category as object ) as int
                     screen.SetFocusedListItem( m.curShow )
 
                 end if
+
+            end if
+
+        end if
+
+    end while
+
+end function
+
+'******************************************************
+'** Display a directory screen and wait for events from
+'** the screen. The screen will show retreiving while
+'** we fetch and parse the feeds for the video posters
+'******************************************************
+function showDirectoryPosterScreen( screen as object, directory as object ) as integer
+
+    if validateParam( screen,    "roPosterScreen",     "showPosterScreen" ) = false return -1
+    if validateParam( directory, "roAssociativeArray", "showPosterScreen" ) = false return -1
+
+    m.curShow = 0
+
+    conn = InitShowFeedConnection( directory )
+    feed = conn.LoadShowFeed( conn )
+    itemlist = feed.ItemList
+
+    ' Change the List Style if this list is for recording
+    if "rec" = feed.ListType or "episode" = itemlist[0].contentType then
+        screen.SetListStyle( "arced-landscape" )
+    end if
+
+    screen.SetContentList( itemlist )
+    screen.SetFocusToFilterBanner( false )
+    screen.SetFocusedListItem( 0 )
+    screen.Show()
+
+    while true
+
+        msg = wait( 0, screen.GetMessagePort() )
+
+        if "roPosterScreenEvent" = type(msg) then
+
+            if msg.isListItemSelected() then
+
+                m.curShow = msg.GetIndex()
+                itemlist  = screen.GetContentList()
+                curItem = itemlist[m.curShow]
+
+                if curItem.Type = "prev" then
+
+                    refreshPosterScreen( screen, curItem )
+                    screen.SetFocusedListItem( 0 )
+
+                else if curItem.Type = "next" then
+
+                    refreshPosterScreen( screen, curItem )
+                    screen.SetFocusedListItem( -1 )
+
+                else if ( curItem.Type = "dir" ) then
+
+                    newScreen = preShowPosterScreen( curItem.Title, directory.Title )
+                    showDirectoryPosterScreen( newScreen, curItem )
+
+                else
+
+                    newScreen = preShowDetailScreen( curItem.Title, directory.Title )
+                    m.curShow = showDetailScreen( newScreen, screen, itemlist, m.curShow )
+                    screen.SetFocusedListItem( m.curShow )
+
+                end if
+
+            else if msg.isScreenClosed() then
+
+                return -1
 
             end if
 
@@ -123,7 +202,7 @@ function refreshPosterScreen( screen as object, item as object ) as integer
     list = feed.ItemList
 
     ' Change the list style if this list is for recording
-    if feed.ListType = "rec" then
+    if "rec" = feed.ListType or "episode" = list[0].contentType then
         screen.SetListStyle("arced-landscape")
     end if
 

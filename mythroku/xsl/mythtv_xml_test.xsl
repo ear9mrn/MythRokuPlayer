@@ -22,12 +22,20 @@
     </xsl:template>
 
     <xsl:template match="feed">
+
         <h2>Showing: <xsl:value-of select="@resultIndex"/> to <xsl:value-of select="@resultIndex + @resultLength - 1"/> of <xsl:value-of select="@resultTotal"/> files</h2>
+
         <xsl:for-each select="item">
+
+            <xsl:if test="@itemType = 'file' or @itemType = 'dir'">
+                <b><xsl:text>[#</xsl:text><xsl:value-of select="@index" /><xsl:text>] </xsl:text></b>
+            </xsl:if>
+
+            <b><xsl:value-of select="@title" /></b>
 
             <xsl:if test="@itemType = 'prev' or @itemType = 'next'">
 
-                <b><xsl:value-of select="@title" /></b><br/>
+                <br/>
 
                 <table border="1">
                     <tr>
@@ -40,17 +48,30 @@
 
             </xsl:if>
 
+            <xsl:if test="@itemType = 'dir'">
+
+                <br/>
+
+                <table border="1">
+                    <tr>
+                        <td><img src="{@hdImg}" width="200" height="250" /></td>
+                        <td><b>Directory Url:</b><br/><a href="{@feed}"><xsl:value-of select="@feed"/></a></td>
+                    </tr>
+                </table>
+
+                <br />
+
+            </xsl:if>
+
             <xsl:if test="@itemType = 'file'">
 
-                <b><xsl:text>[#</xsl:text><xsl:value-of select="@index" /><xsl:text>] </xsl:text>
-                <xsl:value-of select="@title" /><xsl:text> </xsl:text></b>
-                <i><xsl:value-of select="@subtitle" /></i><br/>
+                <xsl:text> </xsl:text><i><xsl:value-of select="@subtitle" /></i><br/>
 
                 <table border="1">
                     <tr>
                         <td rowspan="5">
                             <xsl:choose>
-                                <xsl:when test="@isRecording = 'true'">
+                                <xsl:when test="@isRecording = 'true' or @contentType = 'episode'">
                                     <img src="{@hdImg}" width="300" height="168" />
                                 </xsl:when>
                                 <xsl:otherwise>
@@ -84,14 +105,20 @@
                             </td>
                         </tr>
                     </xsl:if>
-                </table><br />
+                </table>
+
+                <br />
+
             </xsl:if>
 
         </xsl:for-each>
+
     </xsl:template>
 
     <xsl:template match="stream">
+
         <xsl:value-of select="@quality" />: <a href="{@url}"><xsl:value-of select="@url" /></a><br/>
+
     </xsl:template>
 
 </xsl:stylesheet>
