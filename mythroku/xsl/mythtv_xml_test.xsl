@@ -72,7 +72,7 @@
                         <td rowspan="5">
                             <xsl:choose>
                                 <xsl:when test="@isRecording = 'true' or @contentType = 'episode'">
-                                    <img src="{@hdImg}" width="300" height="168" />
+                                    <img src="{@hdImg}" width="320" height="200" />
                                 </xsl:when>
                                 <xsl:otherwise>
                                     <img src="{@hdImg}" width="200" height="250" />

@@ -117,6 +117,10 @@ function parse_parms()
 
         switch ( $sort['type'] )
         {
+            case 'title':
+            case 'genre':
+                $sort['path']    = $_GET['sort']['path'];
+                break;
             case 'series':
                 $sort['path']    = $_GET['sort']['path'];
                 $sort['season']  = $_GET['sort']['season'];
@@ -172,14 +176,12 @@ function build_sql_rec()
         $SQL .= " AND recorded.title = '{$_GET['sort']['path']}'";
     }
 
-    // Add sorting
+    // Add sorting. Title and genre sorting done later.
     switch ( $_GET['sort']['type'] )
     {
-        case 'title':    $SQL .= " ORDER BY recorded.title ASC";                     break;
-        case 'date':     $SQL .= " ORDER BY recorded.starttime, recorded.title ASC"; break;
-        case 'channel':  $SQL .= " ORDER BY recorded.chanid, recorded.title ASC";    break;
-        case 'genre':    $SQL .= " ORDER BY recorded.category, recorded.title ASC";  break;
-        case 'recgroup': $SQL .= " ORDER BY recorded.recgroup, recorded.title ASC";  break;
+        case 'date':     $SQL .= " ORDER BY recorded.starttime"; break;
+        case 'channel':  $SQL .= " ORDER BY recorded.chanid";    break;
+        case 'recgroup': $SQL .= " ORDER BY recorded.recgroup";  break;
     }
 
     return $SQL;
@@ -204,12 +206,10 @@ function build_sql_vid()
         $SQL .= " AND title       = '{$_GET['sort']['path']}'";
     }
 
-    // Add sorting
+    // Add sorting. Title and genre sorting done later.
     switch ( $_GET['sort']['type'] )
     {
-        case 'title': $SQL .= " ORDER BY title ASC";              break;
-        case 'date':  $SQL .= " ORDER BY releasedate, title ASC"; break;
-        case 'genre': $SQL .= " ORDER BY category, title ASC";    break;
+        case 'date':  $SQL .= " ORDER BY releasedate"; break;
     }
 
     return $SQL;
@@ -371,7 +371,7 @@ function build_data_array_vid( $db_field )
         'bitrate'   => 0,
         'url'       => "$mythtvdata/video/" . html_encode($filename),
         'contentId' => html_cleanup($filename),
-        'format'    => pathinfo($filename, PATINFO_EXTENSION),
+        'format'    => pathinfo($filename, PATHINFO_EXTENSION),
     );
 
     $data = array(
@@ -405,6 +405,10 @@ function convert_date( $date )
 {
     list($year, $month, $day) = explode('-', $date);
 
+    if ( 0 == $year  ) { $year  = 1900; }
+    if ( 0 == $month ) { $month = 1;    }
+    if ( 0 == $day   ) { $day   = 1;    }
+
     $timestamp = mktime(0, 0, 0, $month, $day, $year);
 
     return $timestamp;
@@ -412,9 +416,13 @@ function convert_date( $date )
 
 function convert_datetime( $datetime )
 {
-    list($date, $time) = explode(' ', $datetime);
-    list($year, $month, $day) = explode('-', $date);
+    list($date, $time)            = explode(' ', $datetime);
+    list($year, $month,  $day)    = explode('-', $date);
     list($hour, $minute, $second) = explode(':', $time);
+
+    if ( 0 == $year  ) { $year  = 1900; }
+    if ( 0 == $month ) { $month = 1;    }
+    if ( 0 == $day   ) { $day   = 1;    }
 
     $timestamp = mktime($hour, $minute, $second, $month, $day, $year);
 

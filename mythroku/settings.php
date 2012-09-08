@@ -10,6 +10,6 @@ $MythTVdb     = "mythconverg";  // mythtv database name
 $MythTVdbuser = "mythtv";       // mythtv database user
 $MythTVdbpass = "mythtv";       // mythtv database password
 
-$ResultLimit = 50;  // Maximum number of elements to be displayed at one time. Use 0 for no limit.
+$ResultLimit = 30;  // Maximum number of elements to be displayed at one time. Use 0 for no limit.
 
 ?>
