@@ -82,7 +82,7 @@ function showDetailScreen( screen as object, prevScreen as object, showList as o
 
                 if msg.GetIndex() = 1 then
 
-                    'TODO: Consider getting the PlayStart form SQL database.
+                    'TODO: Consider getting the PlayStart from SQL database.
                     '      This will allow for a universal bookmark that can be
                     '      any frontend or Roku. Will require sending PlayStart
                     '      information back to the MythBox.
@@ -120,6 +120,7 @@ function showDetailScreen( screen as object, prevScreen as object, showList as o
                         refreshDetailScreen( screen, showList[showIndex] )
                     end if
 
+' TODO: The breadcrumbs are not getting updated when iterating through files.
                 else if msg.GetIndex() = 8 then
 
                     conn      = InitShowFeedConnection( showList[showIndex] )
@@ -135,6 +136,12 @@ function showDetailScreen( screen as object, prevScreen as object, showList as o
                     showIndex = 1
                     prevScreen.SetContentList( showList )
                     refreshDetailScreen( screen, showList[showIndex] )
+
+' TODO: Need a way to copy the breadcrumbs from this details screen to the poster screen.
+                else if msg.GetIndex() = 10 then
+
+                    newScreen = preShowPosterScreen( showList[showIndex].Title, "" )
+                    showDirectoryPosterScreen( newScreen, showList[showIndex] )
 
                 end if
 
@@ -179,10 +186,16 @@ function refreshDetailScreen( screen as object, item as object ) as integer
         screen.SetStaticRatingEnabled(false)
         screen.AddButton( 9, "Show these files" )
 
+    else if "dir" = item.Type then
+
+        screen.SetStaticRatingEnabled(false)
+        screen.AddButton( 10, "Show these files" )
+
     else
 
         screen.SetStaticRatingEnabled(true)
 
+' TODO: Only add resume button if there is a timestamp that is at least 30 seconds into the show.
         screen.AddButton( 1, "Resume Playing" )
         screen.AddButton( 2, "Play from Beginning" )
 

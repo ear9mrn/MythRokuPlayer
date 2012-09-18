@@ -173,6 +173,7 @@ function build_sql_rec()
     // Filter for a single series, if needed.
     if ( 'series' == $_GET['sort']['type'] )
     {
+        $SQL .= " AND category_type = 'series'";
         $SQL .= " AND recorded.title = '{$_GET['sort']['path']}'";
     }
 
@@ -202,8 +203,16 @@ function build_sql_vid()
     // Filter for a single series, if needed.
     if ( 'series' == $_GET['sort']['type'] )
     {
-        $SQL .= " AND contenttype = 'TELEVISION'";
-        $SQL .= " AND title       = '{$_GET['sort']['path']}'";
+        if ( $GLOBALS['g_isDbVer25'] )
+        {
+            $SQL .= " AND contenttype = 'TELEVISION'";
+        }
+        else
+        {
+            $SQL .= " AND season > 0";
+        }
+
+        $SQL .= " AND title = '{$_GET['sort']['path']}'";
     }
 
     // Add sorting. Title and genre sorting done later.
@@ -234,7 +243,7 @@ function build_data_array( $sql_result )
         }
 
         // If the sort type is 'series' then the list should only contain files
-        // in that serires.
+        // in that series.
         if ( 'series' == $_GET['sort']['type'] )
         {
             array_push( $data_array, $data );
@@ -314,7 +323,7 @@ function build_data_array_rec( $db_field )
     $stream = array(
         'bitrate'   => 0,
         'url'       => "$WebServer/pl/stream/" . html_encode($chanid_strtime),
-        'contentId' => html_cleanup($filename),
+        'contentId' => $filename,
         'format'    => pathinfo($filename, PATHINFO_EXTENSION),
     );
 
@@ -322,16 +331,17 @@ function build_data_array_rec( $db_field )
 
     $data = array(
         'itemType'    => 'file',
-        'title'       => html_cleanup($db_field['title']),
-        'subtitle'    => html_cleanup($db_field['subtitle']),
+        'title'       => $db_field['title'],
+        'subtitle'    => $db_field['subtitle'],
         'hdImgs'      => $imgs,
         'sdImgs'      => $imgs,
-        'synopsis'    => html_cleanup($db_field['description']),
+        'synopsis'    => $db_field['description'],
         'contentType' => $contentType,
         'episode'     => $episode,
-        'genres'      => array( html_cleanup($db_field['category']) ),
+        'genres'      => array( $db_field['category'] ),
         'runtime'     => $end_time - $str_time,
         'date'        => date("m/d/Y h:ia", $str_time),
+        'year'        => date("Y",          $str_time),
         'starRating'  => 0,
         'rating'      => '',
         'isRecording' => 'true',
@@ -353,7 +363,8 @@ function build_data_array_vid( $db_field )
 
     $contentType = 'movie';
     $episode     = array();
-    if ( 'TELEVISION' == $db_field['contenttype'] )
+    if ( (!$GLOBALS['g_isDbVer25'] && 0 < $db_field['season']) ||
+         ( $GLOBALS['g_isDbVer25'] && 'TELEVISION' == $db_field['contenttype']))
     {
         $contentType = 'episode';
         $episode['season']  = $db_field['season'];
@@ -367,25 +378,28 @@ function build_data_array_vid( $db_field )
                           ? $imgs['poster']
                           : $img_script . html_encode($db_field['screenshot']);
 
+    $releasedate = convert_date($db_field['releasedate']);
+
     $stream = array(
         'bitrate'   => 0,
         'url'       => "$mythtvdata/video/" . html_encode($filename),
-        'contentId' => html_cleanup($filename),
+        'contentId' => $filename,
         'format'    => pathinfo($filename, PATHINFO_EXTENSION),
     );
 
     $data = array(
         'itemType'    => 'file',
-        'title'       => html_cleanup($db_field['title']),
-        'subtitle'    => html_cleanup($db_field['subtitle']),
+        'title'       => $db_field['title'],
+        'subtitle'    => $db_field['subtitle'],
         'hdImgs'      => $imgs,
         'sdImgs'      => $imgs,
-        'synopsis'    => html_cleanup($db_field['plot']),
+        'synopsis'    => $db_field['plot'],
         'contentType' => $contentType,
         'episode'     => $episode,
         'genres'      => $GLOBALS['g_vidGenres'][$db_field['intid']],
         'runtime'     => $db_field['length'] * 60,
-        'date'        => date("m/d/Y", convert_date($db_field['releasedate'])),
+        'date'        => date("m/d/Y", $releasedate),
+        'year'        => date("Y",     $releasedate),
         'starRating'  => $db_field['userrating'] * 10,
         'rating'      => $db_field['rating'],
         'isRecording' => 'false',
@@ -430,11 +444,6 @@ function convert_datetime( $datetime )
 }
 
 //------------------------------------------------------------------------------
-
-function html_cleanup($str)
-{
-    return htmlspecialchars( preg_replace('/[^(\x20-\x7F)]*/', '', $str) );
-}
 
 function html_encode($str)
 {

@@ -29,7 +29,9 @@ EOF;
 # Builds XML for a file.
 function xml_file( $args )
 {
-    $genre_str = implode( ", ", $args['genres'] );
+    $args['title']    = html_cleanup( $args['title'] );
+    $args['subtitle'] = html_cleanup( $args['subtitle'] );
+    $args['synopsis'] = html_cleanup( $args['synopsis'] );
 
     $episode = '';
     if ( 'episode' == $args['contentType'] )
@@ -44,6 +46,12 @@ function xml_file( $args )
             $episode = $args['episode']['legacy'];
         }
     }
+    $episode = html_cleanup( $episode );
+
+    $genre = html_cleanup( implode(", ", $args['genres']) );
+
+    $args['hdStream']['contentId'] = html_cleanup( $args['hdStream']['contentId'] );
+    $args['sdStream']['contentId'] = html_cleanup( $args['sdStream']['contentId'] );
 
     return <<<EOF
     <item itemType    = "{$args['itemType']}"
@@ -55,7 +63,7 @@ function xml_file( $args )
           synopsis    = "{$args['synopsis']}"
           contentType = "{$args['contentType']}"
           episode     = "$episode"
-          genres      = "$genre_str"
+          genres      = "$genre"
           runtime     = "{$args['runtime']}"
           date        = "{$args['date']}"
           starRating  = "{$args['starRating']}"
@@ -185,6 +193,13 @@ function xml_end_dir( $args )
     }
 
     return $xml_output;
+}
+
+//------------------------------------------------------------------------------
+
+function html_cleanup($str)
+{
+    return htmlspecialchars( preg_replace('/[^(\x20-\x7F)]*/', '', $str) );
 }
 
 ?>

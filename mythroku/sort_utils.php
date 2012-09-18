@@ -45,7 +45,14 @@ function title_substr( $title )
 # Comparison functor for usort.
 function title_compare( $a, $b )
 {
-    return strcasecmp( title_substr($a['title']), title_substr($b['title']) );
+    $rc = strcasecmp( title_substr($a['title']), title_substr($b['title']) );
+    if ( 0 != $rc ) { return $rc; }
+
+    $rc = strcasecmp( $a['year'], $b['year'] );
+    if ( 0 != $rc ) { return $rc; }
+
+    return strcasecmp( title_substr($a['subtitle']),
+                       title_substr($b['subtitle']) );
 }
 
 //------------------------------------------------------------------------------
@@ -71,7 +78,8 @@ function sort_data_array_title( &$data_array, $sort )
     }
     else
     {
-        if ( $GLOBALS['ResultLimit'] < count($data_array) )
+        if ( (count($data_array) >  $GLOBALS['ResultLimit']) or
+             (0                  == $GLOBALS['ResultLimit']) )
         {
             $subdirs = array();
 
@@ -214,7 +222,8 @@ function series_episode_compare( $a, $b )
 function sort_data_array_series( &$data_array, $sort )
 {
     // NOTE: The given $data_array should be a list of files.
-    // NOTE: All items in this list should from the sort path (see SQL query).
+    // NOTE: All items in $data_array should be from the sort path (see SQL
+    //       query).
 
     if ( $sort['legacy'] )
     {

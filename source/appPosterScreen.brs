@@ -201,17 +201,19 @@ function refreshPosterScreen( screen as object, item as object ) as integer
     feed = conn.LoadShowFeed( conn )
     list = feed.ItemList
 
-    ' Change the list style if this list is for recording
-    if "rec" = feed.ListType or "episode" = list[0].contentType then
-        screen.SetListStyle("arced-landscape")
-    end if
-
     screen.ClearMessage()
 
     if list.Count() = 0 then
         screen.ShowMessage( "No results found." )
     else
+
         screen.SetContentList( list )
+
+        ' Change the list style if this list is for recording
+        if "rec" = feed.ListType or "episode" = list[0].contentType then
+            screen.SetListStyle("arced-landscape")
+        end if
+
     end if
 
     screen.Show()
