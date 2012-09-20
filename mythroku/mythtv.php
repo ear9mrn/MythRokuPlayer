@@ -12,18 +12,20 @@ print <<<EOF
 EOF;
 
 print_cat_begin( "Recordings", "Mythtv_tv.png" );
-$sort = array( 'Title'   => 'title',
-               'Date'    => 'date',
-               'Channel' => 'channel',
-               'Genre'   => 'genre',
-               'Group'   => 'recgroup' );
+$sort = array( 'Title'       => 'title',
+               'Date'        => 'date',
+               'Genre'       => 'genre',
+               'File System' => 'file',
+               'Channel'     => 'channel',
+               'Group'       => 'recgroup' );
 print_cat_leaves( 'rec', $sort, $script );
 print_cat_end();
 
 print_cat_begin( "Videos", "Mythtv_movie.png" );
-$sort = array( 'Title'   => 'title',
-               'Genre'   => 'genre',
-               'Date'    => 'date', );
+$sort = array( 'Title'       => 'title',
+               'Date'        => 'date',
+               'Genre'       => 'genre',
+               'File System' => 'file', );
 print_cat_leaves( 'vid', $sort, $script );
 print_cat_end();
 

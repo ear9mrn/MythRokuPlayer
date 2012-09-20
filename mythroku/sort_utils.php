@@ -13,6 +13,7 @@ function sort_data_array( &$data_array, $sort )
         case 'title':  sort_data_array_title(  $data_array, $sort ); break;
         case 'genre':  sort_data_array_genre(  $data_array, $sort ); break;
         case 'series': sort_data_array_series( $data_array, $sort ); break;
+        case 'file':   sort_data_array_file(   $data_array, $sort ); break;
     }
 }
 
@@ -306,6 +307,47 @@ function sort_data_array_series( &$data_array, $sort )
             usort( $data_array, "series_season_compare" );
         }
     }
+}
+
+//------------------------------------------------------------------------------
+
+function sort_data_array_file( &$data_array, $sort )
+{
+    // NOTE: All items in $data_array should be from the sort path (see SQL
+    //       query).
+
+    $tmpArray = array();
+    foreach ( $data_array as $i => $data )
+    {
+        $regex = '^' . implode("\/", explode("/", $sort['path'])) . '\/?';
+        $str = preg_replace( "/$regex/", '', $data['path'] );
+
+        if ( '' == $str )
+        {
+            array_push( $tmpArray, $data );
+        }
+        else
+        {
+            $newdir  = array_shift( explode("/", $str) );
+            $newpath = $sort['path'];
+            if ( '' != $newpath ) { $newpath .= '/'; }
+            $newpath .= $newdir;
+
+            if ( !$tmpArray[$newpath] )
+            {
+                $dir = array( 'itemType'   => 'dir',
+                              'title'      => $newdir,
+                              'html_parms' => $_GET,
+                              'hdImg'      => $data['hdImgs']['poster'],
+                              'sdImg'      => $data['sdImgs']['poster'] );
+
+                $dir['html_parms']['sort']['path'] = $newpath;
+
+                $tmpArray[$newpath] = $dir;
+            }
+        }
+    }
+    $data_array = $tmpArray;
 }
 
 ?>

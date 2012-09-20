@@ -119,6 +119,7 @@ function parse_parms()
         {
             case 'title':
             case 'genre':
+            case 'file':
                 $sort['path']    = $_GET['sort']['path'];
                 break;
             case 'series':
@@ -176,6 +177,10 @@ function build_sql_rec()
         $SQL .= " AND category_type = 'series'";
         $SQL .= " AND recorded.title = '{$_GET['sort']['path']}'";
     }
+    else if ( 'file' == $_GET['sort']['type'] )
+    {
+        $SQL .= " AND basename LIKE '{$_GET['sort']['path']}%'";
+    }
 
     // Add sorting. Title and genre sorting done later.
     switch ( $_GET['sort']['type'] )
@@ -183,6 +188,7 @@ function build_sql_rec()
         case 'date':     $SQL .= " ORDER BY recorded.starttime"; break;
         case 'channel':  $SQL .= " ORDER BY recorded.chanid";    break;
         case 'recgroup': $SQL .= " ORDER BY recorded.recgroup";  break;
+        case 'file':     $SQL .= " ORDER BY basename";           break;
     }
 
     return $SQL;
@@ -214,11 +220,16 @@ function build_sql_vid()
 
         $SQL .= " AND title = '{$_GET['sort']['path']}'";
     }
+    else if ( 'file' == $_GET['sort']['type'] )
+    {
+        $SQL .= " AND filename LIKE '{$_GET['sort']['path']}%'";
+    }
 
     // Add sorting. Title and genre sorting done later.
     switch ( $_GET['sort']['type'] )
     {
         case 'date':  $SQL .= " ORDER BY releasedate"; break;
+        case 'file':  $SQL .= " ORDER BY filename"; break;
     }
 
     return $SQL;
@@ -244,7 +255,10 @@ function build_data_array( $sql_result )
 
         // If the sort type is 'series' then the list should only contain files
         // in that series.
-        if ( 'series' == $_GET['sort']['type'] )
+        // If the sort type is 'file' then the list should only contain files
+        // in the subdirectory specified in the sort path.
+        if ( 'series' == $_GET['sort']['type'] or
+             'file'   == $_GET['sort']['type'] )
         {
             array_push( $data_array, $data );
         }
@@ -289,6 +303,7 @@ function build_data_array_rec( $db_field )
     require 'settings.php';
 
     $filename = $db_field['basename'];
+    $path_parts = pathinfo($filename);
 
     $str_time = convert_datetime($db_field['starttime']);
     $end_time = convert_datetime($db_field['endtime']);
@@ -323,8 +338,8 @@ function build_data_array_rec( $db_field )
     $stream = array(
         'bitrate'   => 0,
         'url'       => "$WebServer/pl/stream/" . html_encode($chanid_strtime),
-        'contentId' => $filename,
-        'format'    => pathinfo($filename, PATHINFO_EXTENSION),
+        'contentId' => $path_parts['basename'],
+        'format'    => $path_parts['extension'],
     );
 
     // TODO: You can find the TV rating in table 'recordedrating'
@@ -348,6 +363,7 @@ function build_data_array_rec( $db_field )
         'delCmd'      => "$MythRokuDir/mythtv_tv_del.php?basename=" . html_encode($filename),
         'hdStream'    => $stream,
         'sdStream'    => $stream,
+        'path'        => $path_parts['dirname'],
     );
 
     return $data;
@@ -360,6 +376,7 @@ function build_data_array_vid( $db_field )
     require 'settings.php';
 
     $filename = $db_field['filename'];
+    $path_parts = pathinfo($filename);
 
     $contentType = 'movie';
     $episode     = array();
@@ -383,8 +400,8 @@ function build_data_array_vid( $db_field )
     $stream = array(
         'bitrate'   => 0,
         'url'       => "$mythtvdata/video/" . html_encode($filename),
-        'contentId' => $filename,
-        'format'    => pathinfo($filename, PATHINFO_EXTENSION),
+        'contentId' => $path_parts['basename'],
+        'format'    => $path_parts['extension'],
     );
 
     $data = array(
@@ -406,6 +423,7 @@ function build_data_array_vid( $db_field )
         'delCmd'      => '',
         'hdStream'    => $stream,
         'sdStream'    => $stream,
+        'path'        => $path_parts['dirname'],
     );
 
     return $data;

@@ -126,19 +126,10 @@ function showDirectoryPosterScreen( screen as object, directory as object ) as i
 
     m.curShow = 0
 
-    conn = InitShowFeedConnection( directory )
-    feed = conn.LoadShowFeed( conn )
-    itemlist = feed.ItemList
+    itemlist = refreshPosterScreen( screen, directory )
 
-    ' Change the List Style if this list is for recording
-    if "rec" = feed.ListType or "episode" = itemlist[0].contentType then
-        screen.SetListStyle( "arced-landscape" )
-    end if
-
-    screen.SetContentList( itemlist )
     screen.SetFocusToFilterBanner( false )
     screen.SetFocusedListItem( 0 )
-    screen.Show()
 
     while true
 
@@ -191,17 +182,19 @@ end function
 '** Will display all items in the list associated with the given item's feed.
 '*******************************************************************************
 
-function refreshPosterScreen( screen as object, item as object ) as integer
+function refreshPosterScreen( screen as object, item as object ) as object
 
     v1 = validateParam( screen, "roPosterScreen",     "refreshPosterScreen" )
     v2 = validateParam( item,   "roAssociativeArray", "refreshPosterScreen" )
     if not v1 or not v2 then return -1
 
+    screen.ClearMessage()
+    empty = CreateObject("roArray")
+    screen.SetContentList(empty)
+
     conn = InitShowFeedConnection( item )
     feed = conn.LoadShowFeed( conn )
     list = feed.ItemList
-
-    screen.ClearMessage()
 
     if list.Count() = 0 then
         screen.ShowMessage( "No results found." )
@@ -210,13 +203,15 @@ function refreshPosterScreen( screen as object, item as object ) as integer
         screen.SetContentList( list )
 
         ' Change the list style if this list is for recording
-        if "rec" = feed.ListType or "episode" = list[0].contentType then
+        if "rec" = feed.ListType or "episode" = list[0].ContentType then
             screen.SetListStyle("arced-landscape")
         end if
 
     end if
 
     screen.Show()
+
+    return list
 
 end function
 
