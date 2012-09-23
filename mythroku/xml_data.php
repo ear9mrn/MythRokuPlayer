@@ -163,32 +163,60 @@ function build_sql()
 function build_sql_rec()
 {
     // Start building SQL query
-    $SQL  = "SELECT * FROM recorded ";
-    $SQL .= "INNER JOIN recordedprogram USING (programid)";
+    $SQL = <<<EOF
+SELECT A.chanid,
+       A.starttime,
+       A.endtime,
+       A.title,
+       A.subtitle,
+       A.description,
+       A.season,
+       A.episode,
+       A.category,
+       A.recgroup,
+       A.stars,
+       A.basename,
+       A.watched,
+       A.bookmarkupdate,
+       B.category_type,
+       B.hdtv,
+       B.syndicatedepisodenumber,
+       C.rating
+FROM recorded A
+    INNER JOIN recordedprogram B
+        ON A.programid = B.programid
+    LEFT OUTER JOIN recordedrating C
+        ON B.starttime = C.starttime AND B.chanid = C.chanid
+
+EOF;
 
     // Filter file extentions
-    $SQL .= " WHERE ( basename LIKE '%.mp4'";
-    $SQL .=      " OR basename LIKE '%.m4v'";
-    $SQL .=      " OR basename LIKE '%.mov' )";
+    $SQL .= <<<EOF
+WHERE ( A.basename LIKE '%.mp4' OR
+        A.basename LIKE '%.mpg' OR
+        A.basename LIKE '%.m4v' OR
+        A.basename LIKE '%.mov' )
+
+EOF;
 
     // Filter for a single series, if needed.
     if ( 'series' == $_GET['sort']['type'] )
     {
-        $SQL .= " AND category_type = 'series'";
-        $SQL .= " AND recorded.title = '{$_GET['sort']['path']}'";
+        $SQL .= " AND B.category_type = 'series'";
+        $SQL .= " AND A.title = '{$_GET['sort']['path']}'";
     }
     else if ( 'file' == $_GET['sort']['type'] )
     {
-        $SQL .= " AND basename LIKE '{$_GET['sort']['path']}%'";
+        $SQL .= " AND A.basename LIKE '{$_GET['sort']['path']}%'";
     }
 
     // Add sorting. Title and genre sorting done later.
     switch ( $_GET['sort']['type'] )
     {
-        case 'date':     $SQL .= " ORDER BY recorded.starttime"; break;
-        case 'channel':  $SQL .= " ORDER BY recorded.chanid";    break;
-        case 'recgroup': $SQL .= " ORDER BY recorded.recgroup";  break;
-        case 'file':     $SQL .= " ORDER BY basename";           break;
+        case 'date':     $SQL .= " ORDER BY A.starttime"; break;
+        case 'channel':  $SQL .= " ORDER BY A.chanid";    break;
+        case 'recgroup': $SQL .= " ORDER BY A.recgroup";  break;
+        case 'file':     $SQL .= " ORDER BY A.basename";  break;
     }
 
     return $SQL;
@@ -342,8 +370,6 @@ function build_data_array_rec( $db_field )
         'format'    => $path_parts['extension'],
     );
 
-    // TODO: You can find the TV rating in table 'recordedrating'
-
     $data = array(
         'itemType'    => 'file',
         'title'       => $db_field['title'],
@@ -358,7 +384,7 @@ function build_data_array_rec( $db_field )
         'date'        => date("m/d/Y h:ia", $str_time),
         'year'        => date("Y",          $str_time),
         'starRating'  => 0,
-        'rating'      => '',
+        'rating'      => $db_field['rating'],
         'isRecording' => 'true',
         'delCmd'      => "$MythRokuDir/mythtv_tv_del.php?basename=" . html_encode($filename),
         'hdStream'    => $stream,

@@ -213,7 +213,7 @@ function parse_file( e as object ) as object
     o.Type       = e@itemType
     o.ContentId  = e@index
     o.DelCommand = e@delCmd
-    if e.isRecording.GetText() = "true" then
+    if e@isRecording = "true" then
         o.Recording = true
     end if
 
