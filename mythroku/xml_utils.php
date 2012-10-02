@@ -55,6 +55,7 @@ function xml_file( $args )
 
     return <<<EOF
     <item itemType    = "{$args['itemType']}"
+          itemId      = "{$args['itemId']}"
           index       = "{$args['index']}"
           title       = "{$args['title']}"
           subtitle    = "{$args['subtitle']}"

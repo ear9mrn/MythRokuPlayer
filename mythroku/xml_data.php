@@ -173,6 +173,7 @@ SELECT A.chanid,
        A.season,
        A.episode,
        A.category,
+       A.programid,
        A.recgroup,
        A.stars,
        A.basename,
@@ -372,6 +373,7 @@ function build_data_array_rec( $db_field )
 
     $data = array(
         'itemType'    => 'file',
+        'itemId'      => $db_field['programid'],
         'title'       => $db_field['title'],
         'subtitle'    => $db_field['subtitle'],
         'hdImgs'      => $imgs,
@@ -432,6 +434,7 @@ function build_data_array_vid( $db_field )
 
     $data = array(
         'itemType'    => 'file',
+        'itemId'      => $db_field['intid'],
         'title'       => $db_field['title'],
         'subtitle'    => $db_field['subtitle'],
         'hdImgs'      => $imgs,

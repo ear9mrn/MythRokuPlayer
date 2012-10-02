@@ -87,9 +87,6 @@ function showDetailScreen( screen as object, prevScreen as object, showList as o
                     '      any frontend or Roku. Will require sending PlayStart
                     '      information back to the MythBox.
 
-                    'TODO: It seems this registry is never set when a movie
-                    '      exits.
-
                     PlayStart = RegRead( showList[showIndex].ContentId )
                     if PlayStart <> invalid then
                         showList[showIndex].PlayStart = PlayStart.ToInt()

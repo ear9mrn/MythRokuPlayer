@@ -211,7 +211,7 @@ function parse_file( e as object ) as object
 
     ' Other attributes
     o.Type       = e@itemType
-    o.ContentId  = e@index
+    o.ContentId  = e@itemId
     o.DelCommand = e@delCmd
     if e@isRecording = "true" then
         o.Recording = true
