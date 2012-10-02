@@ -303,7 +303,8 @@ function build_data_array( $sql_result )
                                   'title'      => $title,
                                   'html_parms' => $_GET,
                                   'hdImg'      => $data['hdImgs']['poster'],
-                                  'sdImg'      => $data['sdImgs']['poster'], );
+                                  'sdImg'      => $data['sdImgs']['poster'],
+                                  'genres'     => $data['genres'], );
 
                     $dir['html_parms']['index'] = 1;
 
@@ -371,6 +372,9 @@ function build_data_array_rec( $db_field )
         'format'    => $path_parts['extension'],
     );
 
+    $path = $path_parts['dirname'];
+    if ( 0 == strcmp('.', $path) ) { $path = ''; }
+
     $data = array(
         'itemType'    => 'file',
         'itemId'      => $db_field['programid'],
@@ -391,7 +395,7 @@ function build_data_array_rec( $db_field )
         'delCmd'      => "$MythRokuDir/mythtv_tv_del.php?basename=" . html_encode($filename),
         'hdStream'    => $stream,
         'sdStream'    => $stream,
-        'path'        => $path_parts['dirname'],
+        'path'        => $path,
     );
 
     return $data;
@@ -432,6 +436,9 @@ function build_data_array_vid( $db_field )
         'format'    => $path_parts['extension'],
     );
 
+    $path = $path_parts['dirname'];
+    if ( 0 == strcmp('.', $path) ) { $path = ''; }
+
     $data = array(
         'itemType'    => 'file',
         'itemId'      => $db_field['intid'],
@@ -452,7 +459,7 @@ function build_data_array_vid( $db_field )
         'delCmd'      => '',
         'hdStream'    => $stream,
         'sdStream'    => $stream,
-        'path'        => $path_parts['dirname'],
+        'path'        => $path,
     );
 
     return $data;

@@ -169,9 +169,17 @@ function sort_data_array_genre( &$data_array, $sort )
                 $idx = ucwords($genre);
                 if ( !isset($subdirs[$idx]) )
                 {
-                    $subdirs[$idx] = array(
+                    if ( 'dir' == $data['itemType'] )
+                    {
+                        $subdirs[$idx] = array( 'hdImg' => $data['hdImg'],
+                                                'sdImg' => $data['sdImg'] );
+                    }
+                    else
+                    {
+                        $subdirs[$idx] = array(
                                     'hdImg' => $data['hdImgs']['poster'],
                                     'sdImg' => $data['sdImgs']['poster'] );
+                    }
                 }
             }
         }
@@ -316,10 +324,11 @@ function sort_data_array_file( &$data_array, $sort )
     // NOTE: All items in $data_array should be from the sort path (see SQL
     //       query).
 
+    $regex = '^' . implode("\/", explode("/", $sort['path'])) . '\/?';
+
     $tmpArray = array();
     foreach ( $data_array as $i => $data )
     {
-        $regex = '^' . implode("\/", explode("/", $sort['path'])) . '\/?';
         $str = preg_replace( "/$regex/", '', $data['path'] );
 
         if ( '' == $str )
