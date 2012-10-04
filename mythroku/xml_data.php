@@ -198,11 +198,11 @@ EOF;
     if ( 'series' == $_GET['sort']['type'] )
     {
         $SQL .= " WHERE B.category_type = 'series'";
-        $SQL .= " AND A.title = '{$_GET['sort']['path']}'";
+        $SQL .= " AND A.title = \"{$_GET['sort']['path']}\"";
     }
     else if ( 'file' == $_GET['sort']['type'] )
     {
-        $SQL .= " WHERE A.basename LIKE '{$_GET['sort']['path']}%'";
+        $SQL .= " WHERE A.basename LIKE \"{$_GET['sort']['path']}%\"";
     }
 
     // Add sorting. Title and genre sorting done later.
@@ -251,11 +251,11 @@ EOF;
             $SQL .= " AND season > 0";
         }
 
-        $SQL .= " AND title = '{$_GET['sort']['path']}'";
+        $SQL .= " AND title = \"{$_GET['sort']['path']}\"";
     }
     else if ( 'file' == $_GET['sort']['type'] )
     {
-        $SQL .= " AND filename LIKE '{$_GET['sort']['path']}%'";
+        $SQL .= " AND filename LIKE \"{$_GET['sort']['path']}%\"";
     }
 
     // Add sorting. Title and genre sorting done later.
