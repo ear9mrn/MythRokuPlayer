@@ -182,33 +182,27 @@ SELECT A.chanid,
        B.category_type,
        B.hdtv,
        B.syndicatedepisodenumber,
-       C.rating
+       C.rating,
+       D.dirname
 FROM recorded A
     INNER JOIN recordedprogram B
         ON A.programid = B.programid
     LEFT OUTER JOIN recordedrating C
         ON B.starttime = C.starttime AND B.chanid = C.chanid
-
-EOF;
-
-    // Filter file extentions
-    $SQL .= <<<EOF
-WHERE ( A.basename LIKE '%.mp4' OR
-        A.basename LIKE '%.mpg' OR
-        A.basename LIKE '%.m4v' OR
-        A.basename LIKE '%.mov' )
+    LEFT OUTER JOIN storagegroup D
+        ON A.storagegroup = D.groupname
 
 EOF;
 
     // Filter for a single series, if needed.
     if ( 'series' == $_GET['sort']['type'] )
     {
-        $SQL .= " AND B.category_type = 'series'";
+        $SQL .= " WHERE B.category_type = 'series'";
         $SQL .= " AND A.title = '{$_GET['sort']['path']}'";
     }
     else if ( 'file' == $_GET['sort']['type'] )
     {
-        $SQL .= " AND A.basename LIKE '{$_GET['sort']['path']}%'";
+        $SQL .= " WHERE A.basename LIKE '{$_GET['sort']['path']}%'";
     }
 
     // Add sorting. Title and genre sorting done later.
@@ -228,12 +222,22 @@ EOF;
 function build_sql_vid()
 {
     // Start building SQL query
-    $SQL = "SELECT * FROM videometadata";
+    $SQL = <<<EOF
+SELECT A.*,
+       B.dirname
+FROM videometadata A
+    LEFT OUTER JOIN storagegroup B
+        ON B.groupname = 'Videos'
+
+EOF;
 
     // Filter file extentions
-    $SQL .= " WHERE ( filename LIKE '%.mp4'";
-    $SQL .=      " OR filename LIKE '%.m4v'";
-    $SQL .=      " OR filename LIKE '%.mov' )";
+    $SQL .= <<<EOF
+WHERE ( A.filename LIKE '%.mp4' OR
+        A.filename LIKE '%.m4v' OR
+        A.filename LIKE '%.mov' )
+
+EOF;
 
     // Filter for a single series, if needed.
     if ( 'series' == $_GET['sort']['type'] )
@@ -332,13 +336,10 @@ function build_data_array_rec( $db_field )
 {
     require 'settings.php';
 
-    $filename = $db_field['basename'];
-    $path_parts = pathinfo($filename);
+    $file = findTransRecFile($db_field['basename'], $db_field['dirname']);
 
     $str_time = convert_datetime($db_field['starttime']);
     $end_time = convert_datetime($db_field['endtime']);
-
-    $chanid_strtime = "{$db_field['chanid']}/$str_time";
 
     $contentType = 'movie';
     $episode     = array();
@@ -363,39 +364,37 @@ function build_data_array_rec( $db_field )
     $img_script  = "$MythRokuDir/image.php?image=";
     $imgs = array();
     $imgs['poster'] = $poster_path . html_encode("Mythtv_movie.png");
-    $imgs['screen'] = $img_script  . html_encode("$filename.png");
+    $imgs['screen'] = $img_script  . html_encode($file['pic']);
 
     $stream = array(
         'bitrate'   => 0,
-        'url'       => "$WebServer/pl/stream/" . html_encode($chanid_strtime),
-        'contentId' => $path_parts['basename'],
-        'format'    => $path_parts['extension'],
+        'url'       => "$mythtvdata/recordings/" . html_encode($file['file']),
+        'contentId' => $file['base'],
+        'format'    => $file['ext'],
     );
 
-    $path = $path_parts['dirname'];
-    if ( 0 == strcmp('.', $path) ) { $path = ''; }
-
     $data = array(
-        'itemType'    => 'file',
-        'itemId'      => $db_field['programid'],
-        'title'       => $db_field['title'],
-        'subtitle'    => $db_field['subtitle'],
-        'hdImgs'      => $imgs,
-        'sdImgs'      => $imgs,
-        'synopsis'    => $db_field['description'],
-        'contentType' => $contentType,
-        'episode'     => $episode,
-        'genres'      => array( $db_field['category'] ),
-        'runtime'     => $end_time - $str_time,
-        'date'        => date("m/d/Y h:ia", $str_time),
-        'year'        => date("Y",          $str_time),
-        'starRating'  => 0,
-        'rating'      => $db_field['rating'],
-        'isRecording' => 'true',
-        'delCmd'      => "$MythRokuDir/mythtv_tv_del.php?basename=" . html_encode($filename),
-        'hdStream'    => $stream,
-        'sdStream'    => $stream,
-        'path'        => $path,
+        'itemType'     => 'file',
+        'itemId'       => $db_field['programid'],
+        'title'        => $db_field['title'],
+        'subtitle'     => $db_field['subtitle'],
+        'hdImgs'       => $imgs,
+        'sdImgs'       => $imgs,
+        'synopsis'     => $db_field['description'],
+        'contentType'  => $contentType,
+        'episode'      => $episode,
+        'genres'       => array( $db_field['category'] ),
+        'runtime'      => $end_time - $str_time,
+        'date'         => date("m/d/Y h:ia", $str_time),
+        'year'         => date("Y",          $str_time),
+        'starRating'   => 0,
+        'rating'       => $db_field['rating'],
+        'isRecording'  => true,
+        'isTranscoded' => $file['trans'],
+        'delCmd'       => "$MythRokuDir/mythtv_tv_del.php?basename=" . html_encode($file['file']),
+        'hdStream'     => $stream,
+        'sdStream'     => $stream,
+        'path'         => $file['path'],
     );
 
     return $data;
@@ -440,26 +439,27 @@ function build_data_array_vid( $db_field )
     if ( 0 == strcmp('.', $path) ) { $path = ''; }
 
     $data = array(
-        'itemType'    => 'file',
-        'itemId'      => $db_field['intid'],
-        'title'       => $db_field['title'],
-        'subtitle'    => $db_field['subtitle'],
-        'hdImgs'      => $imgs,
-        'sdImgs'      => $imgs,
-        'synopsis'    => $db_field['plot'],
-        'contentType' => $contentType,
-        'episode'     => $episode,
-        'genres'      => $GLOBALS['g_vidGenres'][$db_field['intid']],
-        'runtime'     => $db_field['length'] * 60,
-        'date'        => date("m/d/Y", $releasedate),
-        'year'        => date("Y",     $releasedate),
-        'starRating'  => $db_field['userrating'] * 10,
-        'rating'      => $db_field['rating'],
-        'isRecording' => 'false',
-        'delCmd'      => '',
-        'hdStream'    => $stream,
-        'sdStream'    => $stream,
-        'path'        => $path,
+        'itemType'     => 'file',
+        'itemId'       => $db_field['intid'],
+        'title'        => $db_field['title'],
+        'subtitle'     => $db_field['subtitle'],
+        'hdImgs'       => $imgs,
+        'sdImgs'       => $imgs,
+        'synopsis'     => $db_field['plot'],
+        'contentType'  => $contentType,
+        'episode'      => $episode,
+        'genres'       => $GLOBALS['g_vidGenres'][$db_field['intid']],
+        'runtime'      => $db_field['length'] * 60,
+        'date'         => date("m/d/Y", $releasedate),
+        'year'         => date("Y",     $releasedate),
+        'starRating'   => $db_field['userrating'] * 10,
+        'rating'       => $db_field['rating'],
+        'isRecording'  => false,
+        'isTranscoded' => true,
+        'delCmd'       => '',
+        'hdStream'     => $stream,
+        'sdStream'     => $stream,
+        'path'         => $path,
     );
 
     return $data;
@@ -553,6 +553,48 @@ function getVidGenres()
     }
 
     return $genre_arr;
+}
+
+//------------------------------------------------------------------------------
+
+function findTransRecFile( $filename, $storagegroup )
+{
+    $path_parts = pathinfo($filename);
+
+    $ext = $path_parts['extension'];
+
+    $path = $path_parts['dirname'] . '/';
+    if ( 0 == strcmp('./', $path) ) { $path = ''; }
+
+    $fileNoExt = "$path{$path_parts['filename']}";
+    $pathNoExt = "$storagegroup/$fileNoExt";
+
+    // Try to find a transcoded version of the recording.
+    $newExt = '';
+    $isTranscoded = true;
+    if      ( file_exists("$pathNoExt.m4v") ) $newExt = 'm4v';
+    else if ( file_exists("$pathNoExt.mp4") ) $newExt = 'mp4';
+    else if ( file_exists("$pathNoExt.mov") ) $newExt = 'mov';
+
+    if ( !$newExt )
+    {
+        $newExt = $ext;
+        $isTranscoded = false;
+    }
+
+    // Try to find the screen shot.
+    $pic = '';
+    if      ( file_exists("$pathNoExt.$ext.png") ) $pic = "$fileNoExt.$ext.png";
+    else if ( file_exists("$pathNoExt.m4v.png")  ) $pic = "$fileNoExt.m4v.png";
+    else if ( file_exists("$pathNoExt.mp4.png")  ) $pic = "$fileNoExt.mp4.png";
+    else if ( file_exists("$pathNoExt.mov.png")  ) $pic = "$fileNoExt.mov.png";
+
+    return array( 'file'  => "$fileNoExt.$newExt",
+                  'path'  => $path,
+                  'base'  => $fileNoExt,
+                  'ext'   => $newExt,
+                  'pic'   => $pic,
+                  'trans' => $isTranscoded, );
 }
 
 ?>

@@ -53,24 +53,28 @@ function xml_file( $args )
     $args['hdStream']['contentId'] = html_cleanup( $args['hdStream']['contentId'] );
     $args['sdStream']['contentId'] = html_cleanup( $args['sdStream']['contentId'] );
 
+    $isRecording  = $args['isRecording']  ? 1 : 0;
+    $isTranscoded = $args['isTranscoded'] ? 1 : 0;
+
     return <<<EOF
-    <item itemType    = "{$args['itemType']}"
-          itemId      = "{$args['itemId']}"
-          index       = "{$args['index']}"
-          title       = "{$args['title']}"
-          subtitle    = "{$args['subtitle']}"
-          hdImg       = "{$args['hdImgs']['screen']}"
-          sdImg       = "{$args['sdImgs']['screen']}"
-          synopsis    = "{$args['synopsis']}"
-          contentType = "{$args['contentType']}"
-          episode     = "$episode"
-          genres      = "$genre"
-          runtime     = "{$args['runtime']}"
-          date        = "{$args['date']}"
-          starRating  = "{$args['starRating']}"
-          rating      = "{$args['rating']}"
-          isRecording = "{$args['isRecording']}"
-          delCmd      = "{$args['delCmd']}" >
+    <item itemType     = "{$args['itemType']}"
+          itemId       = "{$args['itemId']}"
+          index        = "{$args['index']}"
+          title        = "{$args['title']}"
+          subtitle     = "{$args['subtitle']}"
+          hdImg        = "{$args['hdImgs']['screen']}"
+          sdImg        = "{$args['sdImgs']['screen']}"
+          synopsis     = "{$args['synopsis']}"
+          contentType  = "{$args['contentType']}"
+          episode      = "$episode"
+          genres       = "$genre"
+          runtime      = "{$args['runtime']}"
+          date         = "{$args['date']}"
+          starRating   = "{$args['starRating']}"
+          rating       = "{$args['rating']}"
+          isRecording  = "$isRecording"
+          isTranscoded = "$isTranscoded"
+          delCmd       = "{$args['delCmd']}" >
         <stream bitrate   = "{$args['hdStream']['bitrate']}"
                 url       = "{$args['hdStream']['url']}"
                 quality   = "HD"

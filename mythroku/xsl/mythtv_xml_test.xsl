@@ -65,13 +65,17 @@
 
             <xsl:if test="@itemType = 'file'">
 
-                <xsl:text> </xsl:text><i><xsl:value-of select="@subtitle" /></i><br/>
+                <xsl:text> </xsl:text><i><xsl:value-of select="@subtitle" /></i>
+                <xsl:if test="@isTranscoded = 0">
+                    <xsl:text> </xsl:text>(NOT TRANSCODED)
+                </xsl:if>
+                <br/>
 
                 <table border="1">
                     <tr>
                         <td rowspan="5">
                             <xsl:choose>
-                                <xsl:when test="@isRecording = 'true' or @contentType = 'episode'">
+                                <xsl:when test="@isRecording != 0 or @contentType = 'episode'">
                                     <img src="{@hdImg}" width="320" height="200" />
                                 </xsl:when>
                                 <xsl:otherwise>
@@ -97,7 +101,7 @@
                         </td>
                     </tr>
                     <tr><td colspan="6"><b>Synopsis:</b><br/><xsl:value-of select="@synopsis" /></td></tr>
-                    <xsl:if test="@isRecording = 'true'">
+                    <xsl:if test="@isRecording != 0">
                         <tr>
                             <td colspan="7">
                                 <b>Delete Command:</b><br/>
