@@ -244,25 +244,25 @@ EOF;
     {
         if ( $GLOBALS['g_isDbVer25'] )
         {
-            $SQL .= " AND contenttype = 'TELEVISION'";
+            $SQL .= " AND A.contenttype = 'TELEVISION'";
         }
         else
         {
-            $SQL .= " AND season > 0";
+            $SQL .= " AND A.season > 0";
         }
 
-        $SQL .= " AND title = \"{$_GET['sort']['path']}\"";
+        $SQL .= " AND A.title = \"{$_GET['sort']['path']}\"";
     }
     else if ( 'file' == $_GET['sort']['type'] )
     {
-        $SQL .= " AND filename LIKE \"{$_GET['sort']['path']}%\"";
+        $SQL .= " AND A.filename LIKE \"{$_GET['sort']['path']}%\"";
     }
 
     // Add sorting. Title and genre sorting done later.
     switch ( $_GET['sort']['type'] )
     {
-        case 'date':  $SQL .= " ORDER BY releasedate"; break;
-        case 'file':  $SQL .= " ORDER BY filename"; break;
+        case 'date':  $SQL .= " ORDER BY A.releasedate"; break;
+        case 'file':  $SQL .= " ORDER BY A.filename"; break;
     }
 
     return $SQL;
@@ -435,8 +435,8 @@ function build_data_array_vid( $db_field )
         'format'    => $path_parts['extension'],
     );
 
-    $path = $path_parts['dirname'];
-    if ( 0 == strcmp('.', $path) ) { $path = ''; }
+    $path = $path_parts['dirname'] . '/';
+    if ( 0 == strcmp('./', $path) ) { $path = ''; }
 
     $data = array(
         'itemType'     => 'file',
