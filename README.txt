@@ -62,6 +62,16 @@ Setup
     Edit the settings.php file with your local parameters (i.e. webserver URL
     and MySQL credentials.
 
+    NOTE: In order to be able to delete recordings from your Roku, the MythtWeb
+          user (typically 'www-data' or 'apache') will need to have write
+          permissions to your recordings. The recordings are typically owned by
+          the 'mythtv' user and have group write permissions so it is easiest to
+          just add the MythWeb user to the 'mythtv' group. For example:
+
+              usermod -a -G mythtv www-data
+
+          Note that a reboot is required for this to take affect.
+
  4) Convert all video files to MPEG-4 (H.264) format
 
     The Roku can only stream MPEG-4 video files (.mp4, .m4v, .mov) and
