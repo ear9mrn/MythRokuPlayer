@@ -351,6 +351,7 @@ function sort_data_array_file( &$data_array, $sort )
                               'sdImg'      => $data['sdImgs']['poster'] );
 
                 $dir['html_parms']['sort']['path'] = $newpath;
+                $dir['html_parms']['index'] = 1;
 
                 $tmpArray[$newpath] = $dir;
             }
