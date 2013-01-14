@@ -1,33 +1,26 @@
 <?php
 
-// Get the local info from the settings file
-require_once('./settings.php');
-include('resizeimage.php');
+require_once 'globals.php';
+require_once 'settings.php';
+include      'resizeimage.php';
 
-if ( isset($_GET['image']) )
+// Required inputs:
+//      group -> The storage group name in which the image exists.
+//      file  -> File name of the image.
+
+if ( isset($_GET['group']) and isset($_GET['file']) )
 {
-    $file = rawurlencode( $_GET['image'] );
+    $path = $GLOBALS['g_storageGroups'][$_GET['group']];
+    $file  = rawurldecode( $_GET['file'] );
 
     $image = new SimpleImage();
 
-    do
+    $rc = $image->load( $path . '/' . $file );
+    if ( $rc )
     {
-        // Look for video cover files
-        $rc = $image->load( $mythtvdata . "/video_covers/" . $file );
-        if ( $rc ) break;
-
-        // Look for video screen shots
-        $rc = $image->load( $mythtvdata . "/video_screenshots/" . $file );
-        if ( $rc ) break;
-
-        // Look for recording screen shots
-        $rc = $image->load( $mythtvdata . "/recordings/" . $file );
-        if ( $rc ) break;
-
-    } while (0);
-
-    $image->resizeToWidth(250);
-    $image->output();
+        $image->resizeToWidth(250);
+        $image->output();
+    }
 }
 
 ?>

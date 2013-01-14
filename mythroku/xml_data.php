@@ -1,5 +1,6 @@
 <?php
 
+require_once 'globals.php';
 include 'sort_utils.php';
 
 $g_isDbVer25 = false;
@@ -115,18 +116,25 @@ function parse_parms()
     {
         $sort['type'] = $_GET['sort']['type'];
 
-        switch ( $sort['type'] )
+        $sort['path'] = '';
+        if ( isset($_GET['sort']['path']) )
         {
-            case 'title':
-            case 'genre':
-            case 'file':
-                $sort['path']    = $_GET['sort']['path'];
-                break;
-            case 'series':
-                $sort['path']    = $_GET['sort']['path'];
-                $sort['season']  = $_GET['sort']['season'];
-                $sort['legacy']  = $_GET['sort']['legacy'];
-                break;
+            $sort['path'] = $_GET['sort']['path'];
+        }
+
+        if ( 'series' == $sort['type'] )
+        {
+            $sort['season'] = '';
+            if ( isset($_GET['sort']['season']) )
+            {
+                $sort['season'] = $_GET['sort']['season'];
+            }
+
+            $sort['legacy'] = '';
+            if ( isset($_GET['sort']['legacy']) )
+            {
+                $sort['legacy'] = $_GET['sort']['legacy'];
+            }
         }
     }
     else
@@ -178,6 +186,7 @@ SELECT A.chanid,
        A.stars,
        A.basename,
        A.watched,
+       A.storagegroup,
        A.bookmarkupdate,
        B.category_type,
        B.hdtv,
@@ -360,11 +369,11 @@ function build_data_array_rec( $db_field )
         }
     }
 
-    $poster_path = "$MythRokuDir/images/";
-    $img_script  = "$MythRokuDir/image.php?image=";
+    $img_script = "$MythRokuDir/image.php?";
     $imgs = array();
-    $imgs['poster'] = $poster_path . html_encode("Mythtv_movie.png");
-    $imgs['screen'] = $img_script  . html_encode($file['pic']);
+    $imgs['poster'] = "$MythRokuDir/images/Mythtv_movie.png";
+    $tmp = array('group' => $db_field['storagegroup'], 'file' => $file['pic']);
+    $imgs['screen'] = $img_script . http_build_query($tmp);
 
     $stream = array(
         'bitrate'   => 0,
@@ -419,12 +428,14 @@ function build_data_array_vid( $db_field )
         $episode['episode'] = $db_field['episode'];
     }
 
-    $img_script = "$MythRokuDir/image.php?image=";
+    $img_script = "$MythRokuDir/image.php?";
     $imgs = array();
-    $imgs['poster'] = $img_script . html_encode($db_field['coverfile']);
+    $tmp = array('group' => 'Coverart', 'file' => $db_field['coverfile']);
+    $imgs['poster'] = $img_script . http_build_query($tmp);
+    $tmp = array('group' => 'Screenshots', 'file' => $db_field['screenshot']);
     $imgs['screen'] = ( 'movie' == $contentType )
                           ? $imgs['poster']
-                          : $img_script . html_encode($db_field['screenshot']);
+                          : $img_script . http_build_query($tmp);
 
     $releasedate = convert_date($db_field['releasedate']);
 

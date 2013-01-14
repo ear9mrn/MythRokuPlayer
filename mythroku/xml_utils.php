@@ -33,6 +33,9 @@ function xml_file( $args )
     $args['subtitle'] = html_cleanup( $args['subtitle'] );
     $args['synopsis'] = html_cleanup( $args['synopsis'] );
 
+    $hdImg = htmlspecialchars($args['hdImgs']['screen']);
+    $sdImg = htmlspecialchars($args['sdImgs']['screen']);
+
     $episode = '';
     if ( 'episode' == $args['contentType'] )
     {
@@ -62,8 +65,8 @@ function xml_file( $args )
           index        = "{$args['index']}"
           title        = "{$args['title']}"
           subtitle     = "{$args['subtitle']}"
-          hdImg        = "{$args['hdImgs']['screen']}"
-          sdImg        = "{$args['sdImgs']['screen']}"
+          hdImg        = "$hdImg"
+          sdImg        = "$sdImg"
           synopsis     = "{$args['synopsis']}"
           contentType  = "{$args['contentType']}"
           episode      = "$episode"
@@ -98,6 +101,10 @@ function xml_dir( $args )
 {
     require 'settings.php';
 
+    $title = html_cleanup( $args['title'] );
+    $hdImg = htmlspecialchars( $args['hdImg'] );
+    $sdImg = htmlspecialchars( $args['sdImg'] );
+
     $script = isset($args['html_parms']['test']) ? 'mythtv_test.php'
                                                  : 'mythtv_xml.php';
 
@@ -108,9 +115,9 @@ function xml_dir( $args )
     return <<<EOF
     <item itemType = "{$args['itemType']}"
           index    = "{$args['index']}"
-          title    = "{$args['title']}"
-          hdImg    = "{$args['hdImg']}"
-          sdImg    = "{$args['sdImg']}"
+          title    = "$title"
+          hdImg    = "$hdImg"
+          sdImg    = "$sdImg"
           feed     = "$feed" />
 
 
