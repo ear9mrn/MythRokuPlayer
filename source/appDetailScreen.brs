@@ -193,11 +193,13 @@ function refreshDetailScreen( screen as object, item as object ) as integer
         screen.SetStaticRatingEnabled(true)
 
 ' TODO: Only add resume button if there is a timestamp that is at least 30 seconds into the show.
-        screen.AddButton( 1, "Resume Playing" )
-        screen.AddButton( 2, "Play from Beginning" )
+        if item.Transcoded then
+            screen.AddButton( 1, "Resume Playing" )
+            screen.AddButton( 2, "Play from Beginning" )
 
-        if item.Recording then
-            screen.AddButton( 7, "Delete" )
+            if item.Recording then
+                screen.AddButton( 7, "Delete" )
+            end if
         end if
 
     end if
