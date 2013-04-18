@@ -173,8 +173,8 @@ function build_sql_rec()
     // Start building SQL query
     $SQL = <<<EOF
 SELECT A.chanid,
-       A.starttime,
-       A.endtime,
+       A.starttime AS actualStartTime,
+       A.endtime   AS actualEndTime,
        A.title,
        A.subtitle,
        A.description,
@@ -188,6 +188,8 @@ SELECT A.chanid,
        A.watched,
        A.storagegroup,
        A.bookmarkupdate,
+       B.starttime AS scheduledStartTime,
+       B.endtime   AS scheduledEndTime,
        B.category_type,
        B.hdtv,
        B.syndicatedepisodenumber,
@@ -289,10 +291,26 @@ function build_data_array( $sql_result )
     {
         $data = array();
 
-        switch ( $_GET['type'] )
+        if ( 'rec' == $_GET['type'] )
         {
-            case 'rec': $data = build_data_array_rec( $db_field ); break;
-            case 'vid': $data = build_data_array_vid( $db_field ); break;
+            $file = findTransRecFile( $db_field['basename'],
+                                      $db_field['dirname'] );
+            if ( !$file['trans'] )
+            {
+                continue; // not playable because not transcoded.
+            }
+
+            if ( checkPendingJobs($db_field['chanid'],
+                                  $db_field['actualStartTime']) )
+            {
+                continue; // not playable because of pending jobs.
+            }
+
+            $data = build_data_array_rec( $db_field, $file );
+        }
+        else if ( 'vid' == $_GET['type'] )
+        {
+            $data = build_data_array_vid( $db_field );
         }
 
         // If the sort type is 'series' then the list should only contain files
@@ -341,14 +359,12 @@ function build_data_array( $sql_result )
 
 //------------------------------------------------------------------------------
 
-function build_data_array_rec( $db_field )
+function build_data_array_rec( $db_field, $file )
 {
     require 'settings.php';
 
-    $file = findTransRecFile($db_field['basename'], $db_field['dirname']);
-
-    $str_time = convert_datetime($db_field['starttime']);
-    $end_time = convert_datetime($db_field['endtime']);
+    $str_time = convert_datetime($db_field['actualStartTime']);
+    $end_time = convert_datetime($db_field['actualEndTime']  );
 
     $contentType = 'movie';
     $episode     = array();
@@ -606,6 +622,30 @@ function findTransRecFile( $filename, $storagegroup )
                   'ext'   => $newExt,
                   'pic'   => $pic,
                   'trans' => $isTranscoded, );
+}
+
+//------------------------------------------------------------------------------
+
+function checkPendingJobs( $chanid, $actualStartTime )
+{
+    $SQL = <<<EOF
+SELECT status FROM jobqueue
+WHERE chanid = '$chanid' AND starttime = '$actualStartTime'
+EOF;
+
+    $result = mysql_query($SQL);
+
+    while ( $db_field = mysql_fetch_assoc($result) )
+    {
+        // A status of 0x100 or greater indicates that the job is done whether
+        // is finished successfully or not (from jobqueue.h).
+        if ( 0x100 > $db_field['status'] )
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 ?>
