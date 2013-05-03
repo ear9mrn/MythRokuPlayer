@@ -90,6 +90,9 @@ function init_show_feed_file() as object
     o.Recording     = false
     o.Transcoded    = false
 
+    o.chanid    = ""
+    o.starttime = ""
+
     return o
 
 end function
@@ -238,6 +241,9 @@ function parse_file( e as object ) as object
     o.ReleaseDate        = e@date
     o.Rating             = e@rating
     o.StarRating         = strtoi(e@starRating)
+
+    o.chanid    = e@chanid
+    o.starttime = e@starttime
 
     o.Actors     = e@subtitle
 '   o.Director   = e@

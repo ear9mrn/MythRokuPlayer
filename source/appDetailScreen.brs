@@ -102,19 +102,31 @@ function showDetailScreen( screen as object, prevScreen as object, showList as o
 
                     print "[showDetailScreen] Delete button pressed: " + showList[showIndex].DelCommand
 
-                    Dbg( "MythRoku: Confirm delete recording." )
-                    title = "MythRoku: Confirm delete recording."
-                    text  = "Are you sure you want to delete this recording?"
-
-                    if ShowDialog2Buttons( title, text, "Yes", "no, return" ) = 0 then
-                        http = NewHttp( showList[showIndex].DelCommand )
-                        Dbg( "url: ", http.Http.GetUrl() )
-                        rsp = http.GetToStringWithRetry()
-                        showList.Delete( showIndex )
-                        kid = m.Categories.Kids[0]
-                        displayCategoryPosterScreen( kid )
+                    url = RegRead("MythRokuServerURL") + "/queryJobs.php"
+                    url = url + "?chanid=" + showList[showIndex].chanid
+                    url = url + "&starttime=" + HttpEncode( showList[showIndex].starttime )
+                    http = NewHttp( url )
+                    query = http.GetToStringWithRetry()
+                    if "true" = query then
+                        title = "MythRoku: Request failed."
+                        text  = "Unable to delete recording because there are jobs pending"
+                        ShowDialog1Button(title, text, "Done")
                     else
-                        refreshDetailScreen( screen, showList[showIndex] )
+
+                        Dbg( "MythRoku: Confirm delete recording." )
+                        title = "MythRoku: Confirm delete recording."
+                        text  = "Are you sure you want to delete this recording?"
+
+                        if ShowDialog2Buttons( title, text, "Yes", "No, return" ) = 0 then
+                            http = NewHttp( showList[showIndex].DelCommand )
+                            Dbg( "url: ", http.Http.GetUrl() )
+                            rsp = http.GetToStringWithRetry()
+                            showList.Delete( showIndex )
+                            kid = m.Categories.Kids[0]
+                            displayCategoryPosterScreen( kid )
+                        else
+                            refreshDetailScreen( screen, showList[showIndex] )
+                        end if
                     end if
 
 ' TODO: The breadcrumbs are not getting updated when iterating through files.

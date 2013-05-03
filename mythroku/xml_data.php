@@ -188,6 +188,7 @@ SELECT A.chanid,
        A.watched,
        A.storagegroup,
        A.bookmarkupdate,
+       A.hostname,
        B.starttime AS scheduledStartTime,
        B.endtime   AS scheduledEndTime,
        B.category_type,
@@ -295,15 +296,10 @@ function build_data_array( $sql_result )
         {
             $file = findTransRecFile( $db_field['basename'],
                                       $db_field['dirname'] );
+            $db_field['basename'] = $file['file']; // in case it changed
             if ( !$file['trans'] )
             {
                 continue; // not playable because not transcoded.
-            }
-
-            if ( checkPendingJobs($db_field['chanid'],
-                                  $db_field['actualStartTime']) )
-            {
-                continue; // not playable because of pending jobs.
             }
 
             $data = build_data_array_rec( $db_field, $file );
@@ -388,12 +384,15 @@ function build_data_array_rec( $db_field, $file )
     $img_script = "$MythRokuDir/image.php?";
     $imgs = array();
     $imgs['poster'] = "$MythRokuDir/images/Mythtv_movie.png";
-    $tmp = array('group' => $db_field['storagegroup'], 'file' => $file['pic']);
-    $imgs['screen'] = $img_script . http_build_query($tmp);
+    $imgs['screen'] = "$WebServer/tv/get_pixmap/${db_field['hostname']}/" .
+                      "${db_field['chanid']}/" .
+                      convert_datetime($db_field['actualStartTime']) .
+                      "/320/180/-1/${db_field['basename']}.png";
 
     $stream = array(
         'bitrate'   => 0,
-        'url'       => "$mythtvdata/recordings/" . html_encode($file['file']),
+        'url'       => "$WebServer/pl/stream/${db_field['chanid']}/" .
+                       convert_datetime($db_field['actualStartTime']),
         'contentId' => $file['base'],
         'format'    => $file['ext'],
     );
@@ -420,6 +419,8 @@ function build_data_array_rec( $db_field, $file )
         'hdStream'     => $stream,
         'sdStream'     => $stream,
         'path'         => $file['path'],
+        'chanid'       => $db_field['chanid'],
+        'starttime'    => $db_field['actualStartTime'],
     );
 
     return $data;
@@ -609,43 +610,24 @@ function findTransRecFile( $filename, $storagegroup )
         $isTranscoded = false;
     }
 
-    // Try to find the screen shot.
-    $pic = '';
-    if      ( file_exists("$pathNoExt.$ext.png") ) $pic = "$fileNoExt.$ext.png";
-    else if ( file_exists("$pathNoExt.m4v.png")  ) $pic = "$fileNoExt.m4v.png";
-    else if ( file_exists("$pathNoExt.mp4.png")  ) $pic = "$fileNoExt.mp4.png";
-    else if ( file_exists("$pathNoExt.mov.png")  ) $pic = "$fileNoExt.mov.png";
+    $newfile = "$fileNoExt.$newExt";
+    if ( $newfile != $filename )
+    {
+        // Update the database with the transcoded filename. This must be done
+        // or MythWeb will try to play a non transcoded file.
+        $SQL = "UPDATE recorded " .
+               "SET basename = '$newfile' " .
+               "WHERE basename = '$filename'";
+        print $SQL;
+        mysql_query( $SQL );
+    }
 
-    return array( 'file'  => "$fileNoExt.$newExt",
+    return array( 'file'  => $newfile,
                   'path'  => $path,
                   'base'  => $fileNoExt,
                   'ext'   => $newExt,
                   'pic'   => $pic,
                   'trans' => $isTranscoded, );
-}
-
-//------------------------------------------------------------------------------
-
-function checkPendingJobs( $chanid, $actualStartTime )
-{
-    $SQL = <<<EOF
-SELECT status FROM jobqueue
-WHERE chanid = '$chanid' AND starttime = '$actualStartTime'
-EOF;
-
-    $result = mysql_query($SQL);
-
-    while ( $db_field = mysql_fetch_assoc($result) )
-    {
-        // A status of 0x100 or greater indicates that the job is done whether
-        // is finished successfully or not (from jobqueue.h).
-        if ( 0x100 > $db_field['status'] )
-        {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 ?>

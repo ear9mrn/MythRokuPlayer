@@ -75,6 +75,8 @@ function xml_file( $args )
           date         = "{$args['date']}"
           starRating   = "{$args['starRating']}"
           rating       = "{$args['rating']}"
+          chanid       = "{$args['chanid']}"
+          starttime    = "{$args['starttime']}"
           isRecording  = "$isRecording"
           isTranscoded = "$isTranscoded"
           delCmd       = "{$args['delCmd']}" >
