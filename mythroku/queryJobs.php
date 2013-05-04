@@ -34,12 +34,6 @@ WHERE J.chanid = '$chanid' AND J.starttime = '$starttime'
 
 EOF;
 
-    $SQLs = <<<EOF
-SELECT status FROM jobqueue
-WHERE chanid = '$chanid' AND starttime = '$starttime'
-
-EOF;
-
     $result = mysql_query($SQL);
     if ( mysql_num_rows($result) )
     {
