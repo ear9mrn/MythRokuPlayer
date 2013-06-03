@@ -294,13 +294,6 @@ function build_data_array( $sql_result )
 
         if ( 'rec' == $_GET['type'] )
         {
-            // Test for pending jobs
-            if ( checkPendingJobs($db_field['chanid'],
-                                  $db_field['actualStartTime']) )
-            {
-                continue; // not playable because of pending jobs.
-            }
-
             // Test for a transcoded recording
             $file = findTransRecFile( $db_field['basename'],
                                       $db_field['dirname'] );
@@ -422,7 +415,6 @@ function build_data_array_rec( $db_field, $file )
         'starRating'   => 0,
         'rating'       => $db_field['rating'],
         'isRecording'  => true,
-        'isTranscoded' => $file['trans'],
         'delCmd'       => "$MythRokuDir/mythtv_tv_del.php?basename=" . html_encode($file['file']),
         'hdStream'     => $stream,
         'sdStream'     => $stream,
@@ -491,7 +483,6 @@ function build_data_array_vid( $db_field )
         'starRating'   => $db_field['userrating'] * 10,
         'rating'       => $db_field['rating'],
         'isRecording'  => false,
-        'isTranscoded' => true,
         'delCmd'       => '',
         'hdStream'     => $stream,
         'sdStream'     => $stream,
@@ -634,40 +625,7 @@ function findTransRecFile( $filename, $storagegroup )
                   'path'  => $path,
                   'base'  => $fileNoExt,
                   'ext'   => $newExt,
-                  'pic'   => $pic,
                   'trans' => $isTranscoded, );
-}
-
-//------------------------------------------------------------------------------
-
-function checkPendingJobs( $chanid, $actualStartTime )
-{
-    $SQL = <<<EOF
-SELECT J.status FROM jobqueue J
-JOIN (
-    SELECT CASE value
-      WHEN 'JobAllowTranscode' THEN CAST(0x0001 AS UNSIGNED)
-      WHEN 'JobAllowCommFlag'  THEN CAST(0x0002 AS UNSIGNED)
-      WHEN 'JobAllowMetadata'  THEN CAST(0x0004 AS UNSIGNED)
-      WHEN 'JobAllowUserJob1'  THEN CAST(0x0100 AS UNSIGNED)
-      WHEN 'JobAllowUserJob2'  THEN CAST(0x0200 AS UNSIGNED)
-      WHEN 'JobAllowUserJob3'  THEN CAST(0x0400 AS UNSIGNED)
-      WHEN 'JobAllowUserJob4'  THEN CAST(0x0800 AS UNSIGNED)
-      END AS type
-    FROM settings
-    WHERE value LIKE 'JobAllow%' AND data = 1
-) AS S ON S.type = J.type
-WHERE J.chanid = '$chanid' AND J.starttime = '$actualStartTime'
-
-EOF;
-
-    $result = mysql_query($SQL);
-    if ( mysql_num_rows($result) )
-    {
-        return true;
-    }
-
-    return false;
 }
 
 ?>

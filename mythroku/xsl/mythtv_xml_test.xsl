@@ -66,9 +66,6 @@
             <xsl:if test="@itemType = 'file'">
 
                 <xsl:text> </xsl:text><i><xsl:value-of select="@subtitle" /></i>
-                <xsl:if test="@isTranscoded = 0">
-                    <xsl:text> </xsl:text>(NOT TRANSCODED)
-                </xsl:if>
                 <br/>
 
                 <table border="1">

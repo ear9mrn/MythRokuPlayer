@@ -5,7 +5,8 @@ distributed under the GNU General Public License.
 MythRoku is for streaming MythTV recordings and videos via Roku player.
 
 Prerequisites:
- - Functioning MythTV backend and MythWeb with function streaming of recordings.
+ - Functioning MythTV backend and MythWeb with functional streaming of
+   recordings.
  - All recordings and videos stored in H.264 format (.mp4, .m4v, .mov).
  - Web user (e.g. apache) permissions to delete recordings.
  - See 'Tools' section below for some optional prerequisites.
@@ -24,23 +25,25 @@ Setup
 
  2) Modify MythWeb to enable streaming of H.264 files
 
-	Modify /usr/share/mythtv/mythweb/includes/utils.php by adding the following
+    Modify /usr/share/mythtv/mythweb/includes/utils.php by adding the following
     around line 247:
 
-	    case 'mp4' : return "$url.mp4";
+        case 'mp4' : return "$url.mp4";
 
     Modify /usr/share/mythtv/mythweb/modules/stream/stream_raw.pl by adding an
-    additonal elseif in the file type section:
+    additonal elsif in the file type section:
 
         elsif ($basename =~ /\.mp4$/)
         {
             $type = 'video/mp4';
             $suffix = '.mp4';
-	    }
+        }
+
+    Repeat instructions above for .m4v and .mov as well.
 
  3) Set up the mythroku directory
 
-    You can simply copy the mythroku directory to you mythweb directory
+    You can simply copy the mythroku directory to your mythweb directory
     (typically /usr/share/mythtv/mythweb), but it is easier to just create a
     symbolic link. Regardless, make sure this directory has the same permissions
     as your webserver.
@@ -52,12 +55,12 @@ Setup
 
     This will stop mythweb from adding its templates to the XML data.
 
-	If you are using authentication to protect MythWeb (best practice), you need
+    If you are using authentication to protect MythWeb (best practice), you need
     to add the following to your mythweb.conf file (near the top):
 
-	    <LocationMatch .*/mythroku*>
-	        Allow from 192.168.1.0
-	    </LocationMatch>
+        <LocationMatch .*/mythroku*>
+            Allow from 192.168.1.0
+        </LocationMatch>
 
     Edit the settings.php file with your local parameters (i.e. webserver URL
     and MySQL credentials.
@@ -77,12 +80,12 @@ Setup
     The Roku can only stream MPEG-4 video files (.mp4, .m4v, .mov) and
     recordings generally are stored as MPEG-2 video files.
 
-	Create a user job in mythtv (mythbackend setup-> general-> Job Queue) and
-	add the following to a job command:
+    Create a user job in mythtv (mythbackend setup-> general-> Job Queue) and
+    add the following to a job command:
 
-	    <pathtomythrokuplayer>/tools/rokuencode.sh "%DIR%" "%FILE%"
+        <pathtomythrokuplayer>/tools/rokuencode.sh "%DIR%" "%FILE%"
 
-	In your mythconverge -> setting set the AutoRunUserJob1 (or whichever job
+    In your mythconverge -> setting set the AutoRunUserJob1 (or whichever job
     you set it to) data = 1. This will make sure the job is run after every
     recording.
 
@@ -95,38 +98,57 @@ Setup
     address. See the details in <pathtomythrokuplayer>/Makefile to see how this
     is done.
 
-	Once set, simply type the following command in <pathtomythrokuplayer>/:
+    Once set, simply type the following command in <pathtomythrokuplayer>/:
 
-	    $ make install
+        $ make install
 
-	When you first open the newly installed MythRokuPlayer channel, you will
+    When you first open the newly installed MythRokuPlayer channel, you will
     need to set the path to the mythroku directory on your webserver. For
     example:
 
-	    http//192.168.1.10/mythweb/mythroku
+        http//192.168.1.10/mythweb/mythroku
 
 --------------------------------------------------------------------------------
-Debugging
+Additional Notes
 --------------------------------------------------------------------------------
 
-To access the MythRoku debug console, execute the follwoing:
+1) It has been reported in some cases that jpeg images are not being displayed.
+   The issue is in using imagecreatefromjpeg() when GD is not enabled or
+   installed. It can be installed as follows (add where appropriate):
 
-	telnet <roku_ip_address> 8085
+    Ubuntu 12.04 (stable):
+        sudo apt-get install php5-gd
+        sudo service apache2 restart
+
+2) Users may need to comment out the following line in /etc/my.cnf to allow
+   access to MySQL:
+
+    bind-address = 127.0.0.1
+
+--------------------------------------------------------------------------------
+Debugging and troubleshooting
+--------------------------------------------------------------------------------
+
+To access the MythRoku debug console, execute the following:
+
+    telnet <roku_ip_address> 8085
 
 For example:
 
-	telnet $ROKU_DEV_TARGET 8085 or telnet 192.168.1.8 8085
+    telnet $ROKU_DEV_TARGET 8085 or telnet 192.168.1.8 8085
 
-You may need to comment out the following line in /etc/my.cnf to allow access to
-MySQL:
-
-	bind-address = 127.0.0.1
-
-You can use mythtv_test.php to check your setup. They draw from the same data
+You can use mythtv_test.php to check your setup. It draws from the same data
 that is used to create the XML files for the Roku. If this does not work, then
-MythRoku will not.
-NOTE: You may need to install php5-xsl (sudo apt-get install php5-xsl) to get
-      the mythtv_test.php script to output properly.
+MythRoku will not. Note that You may need to install php5-xsl to get the
+mythtv_test.php script to output properly. It can be installed as follows (add
+where appropriate):
+
+    Ubuntu 12.04 (stable):
+        sudo apt-get install php5-xsl
+        sudo service apache2 restart
+
+    Fedora:
+        yum install php-xml
 
 --------------------------------------------------------------------------------
 Additional Tools

@@ -82,36 +82,33 @@ function showDetailScreen( screen as object, prevScreen as object, showList as o
 
                 if msg.GetIndex() = 1 then
 
-                    'TODO: Consider getting the PlayStart from SQL database.
-                    '      This will allow for a universal bookmark that can be
-                    '      any frontend or Roku. Will require sending PlayStart
-                    '      information back to the MythBox.
+                    if not queryJobs( showList[showIndex] ) then
 
-                    PlayStart = RegRead( showList[showIndex].ContentId )
-                    if PlayStart <> invalid then
-                        showList[showIndex].PlayStart = PlayStart.ToInt()
+                        'TODO: Consider getting the PlayStart from SQL database.
+                        '      This will allow for a universal bookmark that can be
+                        '      any frontend or Roku. Will require sending PlayStart
+                        '      information back to the MythBox.
+
+                        PlayStart = RegRead( showList[showIndex].ContentId )
+                        if PlayStart <> invalid then
+                            showList[showIndex].PlayStart = PlayStart.ToInt()
+                        end if
+                        showVideoScreen( showList[showIndex] )
+
                     end if
-                    showVideoScreen( showList[showIndex] )
 
                 else if msg.GetIndex() = 2 then
 
-                    showList[showIndex].PlayStart = 0
-                    showVideoScreen( showList[showIndex] )
+                    if not queryJobs( showList[showIndex] ) then
+                        showList[showIndex].PlayStart = 0
+                        showVideoScreen( showList[showIndex] )
+                    end if
 
                 else if msg.GetIndex() = 7 then
 
                     print "[showDetailScreen] Delete button pressed: " + showList[showIndex].DelCommand
 
-                    url = RegRead("MythRokuServerURL") + "/queryJobs.php"
-                    url = url + "?chanid=" + showList[showIndex].chanid
-                    url = url + "&starttime=" + HttpEncode( showList[showIndex].starttime )
-                    http = NewHttp( url )
-                    query = http.GetToStringWithRetry()
-                    if "true" = query then
-                        title = "MythRoku: Request failed."
-                        text  = "Unable to delete recording because there are jobs pending"
-                        ShowDialog1Button(title, text, "Done")
-                    else
+                    if not queryJobs( showList[showIndex] ) then
 
                         Dbg( "MythRoku: Confirm delete recording." )
                         title = "MythRoku: Confirm delete recording."
@@ -127,6 +124,7 @@ function showDetailScreen( screen as object, prevScreen as object, showList as o
                         else
                             refreshDetailScreen( screen, showList[showIndex] )
                         end if
+
                     end if
 
 ' TODO: The breadcrumbs are not getting updated when iterating through files.
@@ -205,13 +203,11 @@ function refreshDetailScreen( screen as object, item as object ) as integer
         screen.SetStaticRatingEnabled(true)
 
 ' TODO: Only add resume button if there is a timestamp that is at least 30 seconds into the show.
-        if item.Transcoded then
-            screen.AddButton( 1, "Resume Playing" )
-            screen.AddButton( 2, "Play from Beginning" )
+        screen.AddButton( 1, "Resume Playing" )
+        screen.AddButton( 2, "Play from Beginning" )
 
-            if item.Recording then
-                screen.AddButton( 7, "Delete" )
-            end if
+        if item.Recording then
+            screen.AddButton( 7, "Delete" )
         end if
 
     end if
@@ -269,6 +265,34 @@ function getPrevShow(showList as object, showIndex as integer) as integer
     if not v1 then return -1
 
     return prevIndex
+
+end function
+
+'*******************************************************************************
+
+function queryJobs( i_video as object ) as boolean
+
+    if not i_video.Recording then return false 'nothing to do
+
+    o_jobsRunning = false
+
+    url = RegRead("MythRokuServerURL") + "/queryJobs.php"
+    url = url + "?chanid=" + i_video.chanid
+    url = url + "&starttime=" + HttpEncode( i_video.starttime )
+
+    http = NewHttp( url )
+
+    if "true" = http.GetToStringWithRetry() then
+
+        o_jobsRunning = true
+
+        title = "MythRoku: Request failed."
+        text  = "Unable process action because there are jobs pending."
+        ShowDialog1Button( title, text, "Done" )
+
+    end if
+
+    return o_jobsRunning
 
 end function
 

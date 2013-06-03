@@ -31,6 +31,7 @@ JOIN (
     WHERE value LIKE 'JobAllow%' AND data = 1
 ) AS S ON S.type = J.type
 WHERE J.chanid = '$chanid' AND J.starttime = '$starttime'
+      AND CAST(0x0100 AS UNSIGNED) > J.status
 
 EOF;
 

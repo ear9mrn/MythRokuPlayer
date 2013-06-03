@@ -88,7 +88,6 @@ function init_show_feed_file() as object
     o.ContentId     = ""
     o.DelCommand    = ""
     o.Recording     = false
-    o.Transcoded    = false
 
     o.chanid    = ""
     o.starttime = ""
@@ -218,7 +217,6 @@ function parse_file( e as object ) as object
     o.ContentId  = e@itemId
     o.DelCommand = e@delCmd
     if e@isRecording  = "1" then o.Recording  = true
-    if e@isTranscoded = "1" then o.Transcoded = true
 
     ' Roku specific attributes
     o.ContentType = e@contentType
@@ -262,8 +260,6 @@ function parse_file( e as object ) as object
         else  if "" <> e@episode then
             o.Actors = e@episode + " - " + o.Actors
         end if
-
-        if not o.Transcoded then o.Actors = o.Actors + " (NOT TRANSCODED)"
 
         if o.Recording then
             o.ShortDescriptionLine2 = " Recorded: " + o.ReleaseDate
