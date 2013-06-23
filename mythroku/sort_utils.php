@@ -268,7 +268,7 @@ function sort_data_array_series( &$data_array, $sort )
 
         foreach ( $data_array as $i => $data )
         {
-            $idx = 'Legacy';
+            $idx = '0';
             if ( 0 < $data['episode']['season'] )
             {
                 $idx = $data['episode']['season'];
@@ -281,7 +281,7 @@ function sort_data_array_series( &$data_array, $sort )
             }
         }
 
-        if ( isset($subdirs['Legacy']) and 1 == count($subdirs) )
+        if ( isset($subdirs['0']) and 1 == count($subdirs) )
         {
             // The list should only contain files with legacy season/episode
             // information.
@@ -298,7 +298,7 @@ function sort_data_array_series( &$data_array, $sort )
                               'hdImg'      => $val['hdImg'],
                               'sdImg'      => $val['sdImg'] );
 
-                if ( 'Legacy' == $subdir )
+                if ( '0' == $subdir )
                 {
                     $dir['html_parms']['sort']['legacy'] = 1;
                 }

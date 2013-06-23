@@ -3,7 +3,8 @@
 require_once 'globals.php';
 include 'sort_utils.php';
 
-$g_isDbVer25 = false;
+initGlobals();
+
 $g_vidGenres = array();
 
 function get_xml_data()
@@ -27,7 +28,6 @@ function get_xml_data()
     // Populate the global variables
     // The intent is to query the database for this data only once instead of
     // for each file.
-    $GLOBALS['g_isDbVer25'] = isDbVer25();
     if ( 'vid' == $_GET['type'] )
     {
         $GLOBALS['g_vidGenres'] = getVidGenres();
@@ -254,7 +254,7 @@ EOF;
     // Filter for a single series, if needed.
     if ( 'series' == $_GET['sort']['type'] )
     {
-        if ( $GLOBALS['g_isDbVer25'] )
+        if ( g_isDbVer25 )
         {
             $SQL .= " AND A.contenttype = 'TELEVISION'";
         }
@@ -373,9 +373,8 @@ function build_data_array_rec( $db_field, $file )
         $episode['episode'] = 0;
         $episode['legacy']  = $db_field['syndicatedepisodenumber'];
 
-        if ( $GLOBALS['g_isDbVer25']  and
-             0 < $db_field['season']  and
-             0 < $db_field['episode'] )
+        if ( g_isDbVer25 and
+             0 < $db_field['season'] and 0 < $db_field['episode'] )
         {
             $episode['season']  = $db_field['season'];
             $episode['episode'] = $db_field['episode'];
@@ -386,14 +385,12 @@ function build_data_array_rec( $db_field, $file )
     $imgs = array();
     $imgs['poster'] = "$MythRokuDir/images/Mythtv_movie.png";
     $imgs['screen'] = "$WebServer/tv/get_pixmap/${db_field['hostname']}/" .
-                      "${db_field['chanid']}/" .
-                      convert_datetime($db_field['actualStartTime']) .
+                      "${db_field['chanid']}/$str_time" .
                       "/320/180/-1/${db_field['basename']}.png";
 
     $stream = array(
         'bitrate'   => 0,
-        'url'       => "$WebServer/pl/stream/${db_field['chanid']}/" .
-                       convert_datetime($db_field['actualStartTime']),
+        'url'       => "$WebServer/pl/stream/${db_field['chanid']}/$str_time",
         'contentId' => $file['base'],
         'format'    => $file['ext'],
     );
@@ -437,8 +434,8 @@ function build_data_array_vid( $db_field )
 
     $contentType = 'movie';
     $episode     = array();
-    if ( (!$GLOBALS['g_isDbVer25'] && 0 < $db_field['season']) ||
-         ( $GLOBALS['g_isDbVer25'] && 'TELEVISION' == $db_field['contenttype']))
+    if ( (!g_isDbVer25 && 0 < $db_field['season']) ||
+         ( g_isDbVer25 && 'TELEVISION' == $db_field['contenttype']))
     {
         $contentType = 'episode';
         $episode['season']  = $db_field['season'];
@@ -454,7 +451,7 @@ function build_data_array_vid( $db_field )
                           ? $imgs['poster']
                           : $img_script . http_build_query($tmp);
 
-    $releasedate = convert_date($db_field['releasedate']);
+    $releasedate = convert_datetime($db_field['releasedate']);
 
     $stream = array(
         'bitrate'   => 0,
@@ -496,32 +493,9 @@ function build_data_array_vid( $db_field )
 // Utility functions
 //------------------------------------------------------------------------------
 
-function convert_date( $date )
+function convert_datetime( $str )
 {
-    list($year, $month, $day) = explode('-', $date);
-
-    if ( 0 == $year  ) { $year  = 1900; }
-    if ( 0 == $month ) { $month = 1;    }
-    if ( 0 == $day   ) { $day   = 1;    }
-
-    $timestamp = mktime(0, 0, 0, $month, $day, $year);
-
-    return $timestamp;
-}
-
-function convert_datetime( $datetime )
-{
-    list($date, $time)            = explode(' ', $datetime);
-    list($year, $month,  $day)    = explode('-', $date);
-    list($hour, $minute, $second) = explode(':', $time);
-
-    if ( 0 == $year  ) { $year  = 1900; }
-    if ( 0 == $month ) { $month = 1;    }
-    if ( 0 == $day   ) { $day   = 1;    }
-
-    $timestamp = mktime($hour, $minute, $second, $month, $day, $year);
-
-    return $timestamp;
+    return strtotime( g_isDbVer26 ? "$str UTC" : $str );
 }
 
 //------------------------------------------------------------------------------
@@ -533,9 +507,21 @@ function html_encode($str)
 
 //------------------------------------------------------------------------------
 
-// Returns true if the current database is at least verion .25
-function isDbVer25()
+function initGlobals()
 {
+    $dbVer = getDbVer();
+    define( 'g_isDbVer25', 1299 <= $dbVer ); // at least verion .25
+    define( 'g_isDbVer26', 1307 <= $dbVer ); // at least verion .26
+}
+
+//------------------------------------------------------------------------------
+
+function getDbVer()
+{
+    require_once 'db_utils.php';
+
+    $db_handle = opendb();
+
     $query  = "SELECT * FROM settings WHERE value = 'DBSchemaVer'";
     $result = mysql_query( $query );
     if ( !$result )
@@ -554,10 +540,10 @@ function isDbVer25()
     }
 
     $row = mysql_fetch_assoc( $result );
-    if ( 1299 <= $row['data'] ) // Version .25
-        return true;
 
-    return false;
+    closedb( $db_handle );
+
+    return $row['data'];
 }
 
 //------------------------------------------------------------------------------
