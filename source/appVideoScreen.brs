@@ -41,9 +41,8 @@ Function showVideoScreen(episode As Object)
                 print "Screen closed"
                 exit while
             else if msg.isRequestFailed()
-                title = "MythRoku: Request failed."
-                text  = msg.getMessage()
-                ShowDialog1Button( title, text, "Done" )
+                print "Video request failure: "; msg.GetIndex(); " " msg.GetData() 
+                ShowErrorDialog( msg.getMessage(), "MythRoku: Request failed" )
             else if msg.isStatusMessage()
                 print "Video status: "; msg.GetIndex(); " " msg.GetData()
             else if msg.isButtonPressed()
