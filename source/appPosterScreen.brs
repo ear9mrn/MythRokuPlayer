@@ -188,19 +188,11 @@ function refreshPosterScreen( screen as object, item as object ) as object
     v2 = validateParam( item,   "roAssociativeArray", "refreshPosterScreen" )
     if not v1 or not v2 then return -1
 
-    screen.ClearMessage()
-    empty = CreateObject("roArray")
-    screen.SetContentList(empty)
-
     conn = InitShowFeedConnection( item )
     feed = conn.LoadShowFeed( conn )
     list = feed.ItemList
 
-    if list.Count() = 0 then
-        screen.ShowMessage( "No results found." )
-    else
-
-        screen.SetContentList( list )
+    if list.Count() <> 0 then
 
         ' Change the list style if this list is for recording
         if "rec" = feed.ListType or "episode" = list[0].ContentType then
@@ -209,9 +201,29 @@ function refreshPosterScreen( screen as object, item as object ) as object
 
     end if
 
-    screen.Show()
+    updatePosterList( screen, list )
 
     return list
 
 end function
+
+function updatePosterList( screen as object, list as object ) as void
+
+    v1 = validateParam( screen, "roPosterScreen", "updatePosterList" )
+    v2 = validateParam( list,   "roArray",        "updatePosterList" )
+    if not v1 or not v2 then return
+
+    screen.ClearMessage()
+    screen.SetContentList( CreateObject("roArray") )
+
+    if 0 = list.Count() then
+        screen.ShowMessage( "No results found." )
+    else
+        screen.SetContentList( list )
+    end if
+
+    screen.Show()
+
+end function
+
 

@@ -115,14 +115,20 @@ function showDetailScreen( screen as object, prevScreen as object, showList as o
                         text  = "Are you sure you want to delete this recording?"
 
                         if ShowDialog2Buttons( title, text, "Yes", "No, return" ) = 0 then
+
+                            'Send the HTTP request to delete the recording
                             http = NewHttp( showList[showIndex].DelCommand )
                             Dbg( "url: ", http.Http.GetUrl() )
                             rsp = http.GetToStringWithRetry()
+
+                            'Remove the recording from the poster list and
+                            'refresh it on the screen
                             showList.Delete( showIndex )
-                            kid = m.Categories.Kids[0]
-                            displayCategoryPosterScreen( kid )
-                        else
-                            refreshDetailScreen( screen, showList[showIndex] )
+                            updatePosterList( prevScreen, showList )
+
+                            'Close this details screen
+                            screen.Close()
+
                         end if
 
                     end if
