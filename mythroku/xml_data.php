@@ -455,7 +455,7 @@ function build_data_array_vid( $db_field )
 
     $stream = array(
         'bitrate'   => 0,
-        'url'       => "$mythtvdata/video/" . html_encode($filename),
+        'url'       => "$MythRokuDir/streamVideo.php?id={$db_field['intid']}",
         'contentId' => $path_parts['basename'],
         'format'    => $path_parts['extension'],
     );
