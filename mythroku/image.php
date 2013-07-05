@@ -1,19 +1,26 @@
 <?php
 
-   //get the local info from the settings file
-   require_once('./settings.php');
-   include('resizeimage.php');
- 
-   if (isset($_GET['image'])) {
-     
-     $image = new SimpleImage();
-     $image->load($mythtvdata . "/video_covers/" . $_GET['image']);
-   	if ($RokuDisplayType == 'HD' ) {
-   			$image->resizeToWidth(250);
-		} else {
-			$image->resizeToWidth(150);
-		}
-   	$image->output();
-   }
+require_once 'globals.php';
+require_once 'settings.php';
+include      'resizeimage.php';
+
+// Required inputs:
+//      group -> The storage group name in which the image exists.
+//      file  -> File name of the image.
+
+if ( isset($_GET['group']) and isset($_GET['file']) )
+{
+    $path = $GLOBALS['g_storageGroups'][$_GET['group']];
+    $file  = rawurldecode( $_GET['file'] );
+
+    $image = new SimpleImage();
+
+    $rc = $image->load( $path . '/' . $file );
+    if ( $rc )
+    {
+        $image->resizeToWidth(250);
+        $image->output();
+    }
+}
 
 ?>

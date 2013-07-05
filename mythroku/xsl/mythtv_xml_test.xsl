@@ -22,67 +22,104 @@
     </xsl:template>
 
     <xsl:template match="feed">
+
         <h2>Showing: <xsl:value-of select="@resultIndex"/> to <xsl:value-of select="@resultIndex + @resultLength - 1"/> of <xsl:value-of select="@resultTotal"/> files</h2>
+
         <xsl:for-each select="item">
 
-            <xsl:variable name="img" select="hdImg" />
+            <xsl:if test="@itemType = 'file' or @itemType = 'dir'">
+                <b><xsl:text>[#</xsl:text><xsl:value-of select="@index" /><xsl:text>] </xsl:text></b>
+            </xsl:if>
 
-            <xsl:if test="itemType = 'dir'">
-                <xsl:variable name="url" select="feed" />
+            <b><xsl:value-of select="@title" /></b>
 
-                <b><xsl:value-of select="title" /></b><br/>
+            <xsl:if test="@itemType = 'prev' or @itemType = 'next'">
+
+                <br/>
 
                 <table border="1">
                     <tr>
-                        <td>
-                            <xsl:choose>
-                                <xsl:when test="isRecording = 'true'"> <a href="{$url}"><img src="{$img}" width="300" height="168" /></a> </xsl:when>
-                                <xsl:otherwise> <a href="{$url}"><img src="{$img}" width="200" height="250" /></a> </xsl:otherwise>
-                            </xsl:choose>
-                        </td>
+                        <td><img src="{@hdImg}" width="125" height="125" /></td>
+                        <td><b>Directory Url:</b><br/><a href="{@feed}"><xsl:value-of select="@feed"/></a></td>
                     </tr>
-                </table><br />
+                </table>
+
+                <br />
+
             </xsl:if>
 
-            <xsl:if test="itemType = 'file'">
-                <xsl:variable name="url" select="media/streamUrl" />
+            <xsl:if test="@itemType = 'dir'">
 
-                <b><xsl:text>[#</xsl:text><xsl:value-of select="index" /><xsl:text>] </xsl:text>
-                <xsl:value-of select="title" /><xsl:text> </xsl:text></b>
-                <i><xsl:value-of select="subtitle" /></i><br/>
+                <br/>
+
+                <table border="1">
+                    <tr>
+                        <td><img src="{@hdImg}" width="200" height="250" /></td>
+                        <td><b>Directory Url:</b><br/><a href="{@feed}"><xsl:value-of select="@feed"/></a></td>
+                    </tr>
+                </table>
+
+                <br />
+
+            </xsl:if>
+
+            <xsl:if test="@itemType = 'file'">
+
+                <xsl:text> </xsl:text><i><xsl:value-of select="@subtitle" /></i>
+                <br/>
 
                 <table border="1">
                     <tr>
                         <td rowspan="5">
                             <xsl:choose>
-                                <xsl:when test="isRecording = 'true'"> <a href="{$url}"><img src="{$img}" width="300" height="168" /></a> </xsl:when>
-                                <xsl:otherwise> <a href="{$url}"><img src="{$img}" width="200" height="250" /></a> </xsl:otherwise>
+                                <xsl:when test="@isRecording != 0 or @contentType = 'episode'">
+                                    <img src="{@hdImg}" width="320" height="200" />
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <img src="{@hdImg}" width="200" height="250" />
+                                </xsl:otherwise>
                             </xsl:choose>
                         </td>
-                        <td><b>Type:</b></td><td><xsl:value-of select="contentType" /></td>
-                        <td><b>Genre:</b></td><td><xsl:value-of select="genres" /></td>
-                        <td><b>Quality:</b></td><td><xsl:value-of select="media/streamQuality" /></td>
-                        <td><b>Rating:</b></td><td><xsl:value-of select="rating" /></td>
+                        <td><b>Rating:</b></td><td><xsl:value-of select="@rating" /></td>
+                        <td><b>Runtime:</b></td><td><xsl:value-of select="@runtime div 60" /> min</td>
+                        <td><b>Genre:</b></td><td><xsl:value-of select="@genres" /></td>
                     </tr>
                     <tr>
-                        <td><b>Runtime:</b></td><td><xsl:value-of select="runtime div 60" /> min</td>
-                        <td><b>Date:</b></td><td><xsl:value-of select="date" /></td>
-                        <td><b>Format:</b></td><td><xsl:value-of select="media/streamFormat" /></td>
-                        <td><b>Star Rating:</b></td><td><xsl:value-of select="starRating" /></td>
+                        <td><b>Date:</b></td><td><xsl:value-of select="@date" /></td>
+                        <td><b>Star Rating:</b></td><td><xsl:value-of select="@starRating" /></td>
+                        <xsl:if test="@contentType = 'episode'">
+                            <td><b>Episode:</b></td><td><xsl:value-of select="@episode" /></td>
+                        </xsl:if>
                     </tr>
                     <tr>
-                        <td><b>Episode:</b></td><td><xsl:value-of select="episode" /></td>
+                        <td colspan="6">
+                            <b>Stream Url(s):</b><br/>
+                            <xsl:apply-templates select="stream" />
+                        </td>
                     </tr>
-                    <tr><td colspan="8"><b>Stream Url:</b><br/><a href="{$url}"><xsl:copy-of select="$url" /></a></td></tr>
-                    <tr><td colspan="8"><b>Synopsis:</b><br/><xsl:value-of select="synopsis" /></td></tr>
-                    <xsl:if test="isRecording = 'true'">
-                        <xsl:variable name="delcmd" select="delCmd" />
-                        <tr><td colspan="9"><b>Delete Command:</b><br/><a href="{$delcmd}"><xsl:copy-of select="$delcmd" /></a></td></tr>
+                    <tr><td colspan="6"><b>Synopsis:</b><br/><xsl:value-of select="@synopsis" /></td></tr>
+                    <xsl:if test="@isRecording != 0">
+                        <tr>
+                            <td colspan="7">
+                                <b>Delete Command:</b><br/>
+                                <a href="{@delCmd}"><xsl:value-of select="@delCmd" /></a>
+                            </td>
+                        </tr>
                     </xsl:if>
-                </table><br />
+                </table>
+
+                <br />
+
             </xsl:if>
 
         </xsl:for-each>
+
+    </xsl:template>
+
+    <xsl:template match="stream">
+
+        <xsl:value-of select="@quality" />: <a href="{@url}"><xsl:value-of select="@url" /></a><br/>
+
     </xsl:template>
 
 </xsl:stylesheet>

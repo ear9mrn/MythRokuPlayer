@@ -23,9 +23,6 @@ function InitShowFeedConnection(category as object) as object
 
     conn.LoadShowFeed    = load_show_feed
     conn.ParseShowFeed   = parse_show_feed
-    conn.InitFeedItem    = init_show_feed_item
-
-    print "created feed connection for " + conn.UrlShowFeed
 
     return conn
 
@@ -54,7 +51,8 @@ end function
 ' sparse, so these will be the default values unless they
 ' are overridden while parsing the actual game data
 '***********************************************************
-function init_show_feed_item() as object
+
+function init_show_feed_file() as object
 
     o = CreateObject("roAssociativeArray")
 
@@ -65,11 +63,11 @@ function init_show_feed_item() as object
     o.HDPosterUrl = ""
     o.SDPosterUrl = ""
 
-    o.StreamBitrates    = CreateObject("roArray", 1, true)
-    o.StreamUrls        = CreateObject("roArray", 1, true)
-    o.StreamQualities   = CreateObject("roArray", 1, true)
-    o.StreamContentIDs  = CreateObject("roArray", 1, true)
-    o.StreamFormat      = CreateObject("roArray", 1, true)
+    o.StreamBitrates    = CreateObject("roArray", 2, true)
+    o.StreamUrls        = CreateObject("roArray", 2, true)
+    o.StreamQualities   = CreateObject("roArray", 2, true)
+    o.StreamContentIDs  = CreateObject("roArray", 2, true)
+    o.StreamFormat      = CreateObject("roArray", 2, true)
 
     o.Length            = 0
     o.BookmarkPosition  = 0
@@ -91,6 +89,29 @@ function init_show_feed_item() as object
     o.DelCommand    = ""
     o.Recording     = false
 
+    o.chanid    = ""
+    o.starttime = ""
+
+    return o
+
+end function
+
+'***********************************************************
+
+function init_show_feed_dir() as object
+
+    o = CreateObject("roAssociativeArray")
+
+    o.Type  = ""
+    o.Feed  = ""
+    o.Title = ""
+
+    o.HDPosterUrl = ""
+    o.SDPosterUrl = ""
+
+    o.ShortDescriptionLine1 = ""
+    o.ShortDescriptionLine2 = ""
+
     return o
 
 end function
@@ -101,9 +122,12 @@ end function
 '** initialization. This feed provides a list of all shows
 '** with details for the given category feed.
 '*********************************************************
-function load_show_feed(conn as object) as dynamic
+
+function load_show_feed( conn as object ) as dynamic
 
     if validateParam(conn, "roAssociativeArray", "load_show_feed") = false return invalid
+
+    print "BEGIN load_show_feed -----------------------------------------------"
 
     print "url: " + conn.UrlShowFeed
     http = NewHttp(conn.UrlShowFeed)
@@ -133,13 +157,16 @@ function load_show_feed(conn as object) as dynamic
     m.ParseShowFeed(xml, feed)
     print "Show Feed Parse Took : " + itostr(m.Timer.TotalMilliseconds())
 
+    print "END load_show_feed -------------------------------------------------"
+
     return feed
 
 end function
 
 '**************************************************************************
 '**************************************************************************
-function parse_show_feed(xml as object, feed as object) as void
+
+function parse_show_feed( xml as object, feed as object ) as void
 
     feed.ListType     = validstr(xml@listType)
     feed.ListTotal    = strtoi(  xml@resultTotal)
@@ -147,25 +174,30 @@ function parse_show_feed(xml as object, feed as object) as void
     feed.ResultLength = strtoi(  xml@resultLength)
 
     itemList = xml.GetChildElements()
+
     for each item in itemList
 
         if item.GetName() = "item" then
 
-            tmptype = item.itemType.GetText()
+            tmptype = item@itemType
 
             if tmptype = "file" then
-                item = parse_file(item)
-            else if tmptype = "dir"  then
-                item = parse_dir(item)
-            else
-                print "[parse_show_feed] unsupported type: "; tmptype
-            end if
 
-            feed.ItemList.Push(item)
+                feed.ItemList.Push( parse_file(item) )
+
+            else if tmptype = "prev" or tmptype = "next" or tmptype = "dir" then
+
+                feed.ItemList.Push( parse_dir(item) )
+
+            else
+
+                print "[parse_show_feed] unsupported item type: "; tmptype
+
+            end if
 
         else
 
-            print "[parse_show_feed] unsupported item: "; item.GetName()
+            print "[parse_show_feed] unsupported element: "; item.GetName()
 
         end if
 
@@ -175,77 +207,98 @@ end function
 
 '**************************************************************************
 '**************************************************************************
-function parse_file(element as object) as object
 
-    item = init_show_feed_item()
+function parse_file( e as object ) as object
+
+    o = init_show_feed_file()
 
     ' Other attributes
-    item.ItemType   = validstr(element.itemType.GetText())
-    item.ContentId  = validstr(element.index.GetText())
-    item.DelCommand = validstr(element.delCmd.GetText())
-    if element.isRecording.GetText() = "true" then
-        item.Recording = true
-    end if
+    o.Type       = e@itemType
+    o.ContentId  = e@itemId
+    o.DelCommand = e@delCmd
+    if e@isRecording  = "1" then o.Recording  = true
 
     ' Roku specific attributes
-    item.ContentType = validstr(element.contentType.GetText())
-    item.Title       = validstr(element.title.GetText())
-    item.Description = validstr(element.synopsis.GetText())
-    item.HDPosterUrl = validstr(element.hdImg.GetText())
-    item.SDPosterUrl = validstr(element.sdImg.GetText())
+    o.ContentType = e@contentType
+    o.Title       = e@title
+    o.Description = e@synopsis
+    o.HDPosterUrl = e@hdImg
+    o.SDPosterUrl = e@sdImg
 
-    e = element.media[0]
-    item.StreamBitrates.Push(  strtoi(  e.streamBitrate.GetText()))
-    item.StreamUrls.Push(      validstr(e.streamUrl.GetText()))
-    item.StreamQualities.Push( validstr(e.streamQuality.GetText()))
-    item.StreamContentIDs.Push(validstr(e.streamContentId.GetText()))
-    item.StreamFormat.Push(    validstr(e.streamFormat.GetText()))
+    for i = 0 to 1
+        s = e.stream[i]
+        o.StreamBitrates.Push(  strtoi(s@bitrate) )
+        o.StreamUrls.Push(      s@url             )
+        o.StreamQualities.Push( s@quality         )
+        o.StreamContentIDs.Push(s@contentId       )
+        o.StreamFormat.Push(    s@format          )
+    next i
 
-    item.Length             = strtoi(  element.runtime.GetText())
-'   item.BookmarkPosition   = strtoi(  element..GetText())
-    item.ReleaseDate        = validstr(element.date.GetText())
-    item.Rating             = validstr(element.rating.GetText())
-    item.StarRating         = strtoi(  element.starRating.GetText())
+    o.Length             = strtoi(e@runtime)
+'   o.BookmarkPosition   = strtoi(e@)
+    o.ReleaseDate        = e@date
+    o.Rating             = e@rating
+    o.StarRating         = strtoi(e@starRating)
 
-    item.Actors     = validstr(element.subtitle.GetText())
-'   item.Director   = validstr(element..GetText())
-    item.Categories = validstr(element.genres.GetText())
-    if element.isHD.GetText() = "true" then
-        item.IsHD = true
-    endif
+    o.chanid    = e@chanid
+    o.starttime = e@starttime
 
-    if item.ContentType = "episode"
-        item.EpisodeNumber = validstr(element.episode.GetText())
-        item.ShortDescriptionLine1 = item.Title + " - " + item.Actors
-        if item.Recording
-            item.ShortDescriptionLine2 = "Episode: " + item.EpisodeNumber + " Recorded: " + item.ReleaseDate
-        end if
-        item.Actors = "[" + item.EpisodeNumber + "] " + item.Actors
-    else ' movie
-        item.ShortDescriptionLine1 = item.Title
-        item.ShortDescriptionLine2 = item.Actors
+    o.Actors     = e@subtitle
+'   o.Director   = e@
+    o.Categories = e@genres
+    if e@isHD = "true" then
+        o.IsHD = true
     end if
 
-    return item
+    if o.ContentType = "episode" then
+
+        'NOTE: We do not want to set o.EpisodeNumber otherwise the images will
+        '      not show up in a roPosterScreen (flat-episodic) screen.
+
+        if "" = o.Actors then
+            o.Actors = e@episode
+        else  if "" <> e@episode then
+            o.Actors = e@episode + " - " + o.Actors
+        end if
+
+        if o.Recording then
+            o.ShortDescriptionLine2 = " Recorded: " + o.ReleaseDate
+        end if
+
+    else if o.Recording then
+
+        'NOTE: Set o.ContentType to "episode" for all recordings. Otherwise,
+        '      this will give us 16x9 images
+        o.ContentType = "episode"
+
+    end if
+
+    o.ShortDescriptionLine1 = o.Title
+    if o.Actors <> "" then
+        o.ShortDescriptionLine1 = o.ShortDescriptionLine1 + " - " + o.Actors
+    end if
+
+    return o
 
 end function
 
 '**************************************************************************
 '**************************************************************************
-function parse_dir(element as object) as object
 
-    item = init_show_feed_item()
+function parse_dir( e as object ) as object
 
-    item.ItemType = validstr(element.itemType.GetText())
+    o = init_show_feed_dir()
 
-    item.ShortDescriptionLine1 = validstr(element.title.GetText())
+    o.Type  = e@itemType
+    o.Feed  = e@feed
+    o.Title = e@title
 
-    item.HDPosterUrl = validstr(element.hdImg.GetText())
-    item.SDPosterUrl = validstr(element.sdImg.GetText())
+    o.HDPosterUrl = e@hdImg
+    o.SDPosterUrl = e@sdImg
 
-    item.Feed = validstr(element.feed.GetText())
+    o.ShortDescriptionLine1 = o.Title
 
-    return item
+    return o
 
 end function
 

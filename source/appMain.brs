@@ -47,6 +47,10 @@ Sub initTheme()
     theme.OverhangSliceHD = "pkg:/images/mythtv_overhang_background_HD.png"
     theme.OverhangLogoHD  = "pkg:/images/banner-mythtv_logo_HD.png"
 
+    'Bread Crumb color
+    'The default theme is so light that you can't read it.
+    theme.BreadcrumbTextRight = "#A4A4A4"
+
     app.SetTheme(theme)
 
 End Sub
