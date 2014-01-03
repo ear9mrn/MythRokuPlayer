@@ -300,6 +300,7 @@ function convert_datetime( $datetime )
     list($year, $month, $day) = explode('-', $date);
     list($hour, $minute, $second) = explode(':', $time);
 
+    date_default_timezone_set('UTC');
     $timestamp = mktime($hour, $minute, $second, $month, $day, $year);
 
     return $timestamp;
