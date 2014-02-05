@@ -1,0 +1,32 @@
+Pete Neville provided the initial implementation and the inspiration for those
+of us who followed.  Meanwhile the environment in which the MythRokuPlayer
+must function has changed dramatically:
+- MythTV changed the way they store Date information
+- PHP allows better handling of object dereference
+- The Roku device has undergone 3 major revisions
+
+To those looking to try out MythRokuPlayer, we welcome you.
+
+@rshendershot
+  You may find this branch to be broken.  You may need to side-load
+its channel code.  There is no ongoing development.  This works best
+in legacy environments;  up through MythTV 0.25.
+  For MythTv 0.25 and 0.26 Zane's branch may work for you especially
+if you are using PHP 5.3.  It modifies the player channel to display
+them as sub-categories, but requires a side-load and does not work
+with the original channel.
+  For MythTV 0.25, 0.26, 0.27 and PHP 5.4 and above rshendershot
+branch adds many additional features and completely re-writes the
+PHP backend code to allow flexible features.  It is the only ongoing
+maintenance branch at this time. It works with the original channel.
+  Other forks are obsolete and should be viewed as their authors
+effort towards their own private goals.  The mcaisal branch, however,
+stands out as the only effort to use BIF preview when fast-forwarding
+and rewinding in the playback - similar to netflix.  Its support
+status is unknown.
+
+  I have no desire towards any effort in this code base but since
+so many have recently faced the same question of 'what do I install'
+I felt a quick rundown would be helpful.
+
+Cheers.
