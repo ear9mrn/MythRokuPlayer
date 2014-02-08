@@ -249,7 +249,7 @@ function build_xml_rec( $sql_result, $index )
 
         $quality = $RokuDisplayType;
         $isHD    = 'false';
-#       if ( '0' !== $db_field['hdtv'] ) { $quality = 'HD'; }
+#       if ( '0' !== $db_field['hdtv'] ) { $quality = 'HD'; } 
         if ( 'HD' == $quality ) { $isHD = 'true'; }
 
         $args = array(
