@@ -11,8 +11,7 @@ $db_found = mysql_select_db($MythTVdb, $db_handle);
 if ($db_found) { 
 
 	if (isset($_GET['basename']) ) {
-
-		mysql_query("DELETE FROM recorded WHERE basename = '$_GET['basename']'");
+		mysql_query("DELETE FROM recorded WHERE basename = '" . $_GET['basename'] . "'");
 
 		$files = glob('../data/recordings/*' . RemoveExtension($db_field['basename'])  . '*');
 		array_walk($files,'myunlink');
@@ -48,4 +47,3 @@ function myunlink($t)
 
 
 ?>
-

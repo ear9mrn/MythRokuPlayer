@@ -53,7 +53,9 @@ function xml_file( $args )
         <rating>{$args['rating']}</rating>
         <index>{$args['index']}</index>
         <isRecording>{$args['isRecording']}</isRecording>
-        <delCmd>{$args['delCmd']}</delCmd>
+        <tvormov>{$args['tvormovie']}</tvormov>
+        <delCmd>{$args['delcommand']}</delCmd>
+        <delcommand>{$args['delcommand']}</delcommand>
     </item>
 
 

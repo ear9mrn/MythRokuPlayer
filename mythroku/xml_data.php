@@ -128,9 +128,9 @@ function build_query_vid( $sort )
 function build_query_rec( $sort )
 {
     // Start building SQL query
-	$SQL  = "SELECT * ,recorded.starttime as start_time, recorded.endtime as end_time";
-	$SQL .= " FROM recorded";
-	$SQL .= " INNER JOIN recordedprogram USING (programid)";
+	$SQL  = "SELECT * ,recorded.starttime as start_time, recorded.endtime as end_time ";
+	$SQL .= " FROM recorded ";
+	$SQL .= " INNER JOIN recordedprogram USING (programid) ";
 
     // Filter file extentions
     $SQL .= " WHERE basename LIKE '%.mp4'";
@@ -209,7 +209,8 @@ function build_xml_vid( $sql_result, $index )
             'rating'      => $db_field['rating'],
             'index'       => $index,
             'isRecording' => 'false',
-            'delCmd'      => ''
+            'tvormovie'   => 'movie',
+            'delcommand'      => ''
         );
 
         $xml .= xml_file( $args );
@@ -249,7 +250,7 @@ function build_xml_rec( $sql_result, $index )
 
         $quality = $RokuDisplayType;
         $isHD    = 'false';
-#       if ( '0' !== $db_field['hdtv'] ) { $quality = 'HD'; } 
+#       if ( '0' !== $db_field['hdtv'] ) { $quality = 'HD'; }
         if ( 'HD' == $quality ) { $isHD = 'true'; }
 
         $args = array(
@@ -273,7 +274,8 @@ function build_xml_rec( $sql_result, $index )
             'rating'      => '',
             'index'       => $index,
             'isRecording' => 'true',
-            'delCmd'      => "$MythRokuDir/mythtv_tv_del.php?basename=" . html_encode($filename)
+            'tvormovie'   => 'tv',
+            'delcommand'  => "$MythRokuDir/mythtv_tv_del.php?basename=" . html_encode($filename)
         );
 
         $xml .= xml_file( $args );

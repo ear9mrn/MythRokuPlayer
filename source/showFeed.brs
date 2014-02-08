@@ -182,7 +182,7 @@ function parse_file(element as object) as object
     ' Other attributes
     item.ItemType   = validstr(element.itemType.GetText())
     item.ContentId  = validstr(element.index.GetText())
-    item.DelCommand = validstr(element.delCmd.GetText())
+    item.DelCommand = validstr(element.delcommand.GetText())
     if element.isRecording.GetText() = "true" then
         item.Recording = true
     end if
@@ -248,4 +248,3 @@ function parse_dir(element as object) as object
     return item
 
 end function
-
