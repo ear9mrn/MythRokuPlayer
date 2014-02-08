@@ -128,8 +128,9 @@ function build_query_vid( $sort )
 function build_query_rec( $sort )
 {
     // Start building SQL query
-    $SQL  = "SELECT * FROM recorded ";
-    $SQL .= "INNER JOIN recordedprogram USING (programid)";
+	$SQL  = "SELECT * ,recorded.starttime as start_time, recorded.endtime as end_time";
+	$SQL .= " FROM recorded";
+	$SQL .= " INNER JOIN recordedprogram USING (programid)";
 
     // Filter file extentions
     $SQL .= " WHERE basename LIKE '%.mp4'";
@@ -229,8 +230,8 @@ function build_xml_rec( $sql_result, $index )
     {
         $filename = $db_field['basename'];
 
-        $str_time = convert_datetime($db_field['starttime']);
-        $end_time = convert_datetime($db_field['endtime']);
+        $str_time = convert_datetime($db_field['start_time']);
+        $end_time = convert_datetime($db_field['end_time']);
 
         $chanid_strtime = "{$db_field['chanid']}/$str_time";
 
