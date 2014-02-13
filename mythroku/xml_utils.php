@@ -29,7 +29,10 @@ EOF;
 function xml_file( $args )
 {
     return <<<EOF
-    <item>
+    <item 
+    	sdImg="{$args['sdImg']}"
+    	hdImg="{$args['hdImg']}"
+    >
         <itemType>file</itemType>
         <contentType>{$args['contentType']}</contentType>
         <title>{$args['title']}</title>
