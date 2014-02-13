@@ -35,6 +35,7 @@ function xml_file( $args )
     >
         <itemType>file</itemType>
         <contentType>{$args['contentType']}</contentType>
+        <contentId>{$args['contentId']}</contentId>
         <title>{$args['title']}</title>
         <subtitle>{$args['subtitle']}</subtitle>
         <synopsis>{$args['synopsis']}</synopsis>

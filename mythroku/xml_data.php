@@ -190,6 +190,7 @@ function build_xml_vid( $sql_result, $index )
 
         $args = array(
             'contentType' => $contentType,
+        	'contentId'   => crc32($filename),
             'title'       => html_cleanup($db_field['title']),
             'subtitle'    => html_cleanup($db_field['subtitle']),
             'synopsis'    => html_cleanup($db_field['plot']),
@@ -255,6 +256,7 @@ function build_xml_rec( $sql_result, $index )
 
         $args = array(
             'contentType' => $contentType,
+        	'contentId'   => crc32($filename),
             'title'       => html_cleanup($db_field['title']),
             'subtitle'    => html_cleanup($db_field['subtitle']),
             'synopsis'    => html_cleanup($db_field['description']),
