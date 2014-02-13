@@ -24,6 +24,10 @@ print <<<EOF
         <categoryLeaf title="Date"  description="" feed="$script_vid=date" />
     </category>
 
+    <category title="Settings" description="Roku MythTV Settings" sd_img="$MythRokuDir/images/Mythtv_settings.png" hd_img="$MythRokuDir/images/Mythtv_settings.png">
+		<categoryLeaf title="Settings" description="" feed=""/> 
+    </category>
+    		
 </categories>
 
 EOF;

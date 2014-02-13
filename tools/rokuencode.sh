@@ -20,7 +20,7 @@ echo "UPDATE recorded SET basename='$newbname.mp4',filesize='$NEWFILESIZE' WHERE
 mysql --user=$DATABASEUSER --password=$DATABASEPASSWORD mythconverg < /tmp/update-database.sql
 
 # update the seek table
-#mythcommflag --file $newname --rebuild
+mythcommflag --file $newname --rebuild
 
 # remove the orignal mpg
-#rm $MYTHDIR/$MPGFILE
+rm $MYTHDIR/$MPGFILE

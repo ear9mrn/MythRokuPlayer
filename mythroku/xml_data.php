@@ -297,15 +297,11 @@ function convert_date( $date )
     return $timestamp;
 }
 
-function convert_datetime( $datetime )
+function convert_datetime( $str )
 {
-    list($date, $time) = explode(' ', $datetime);
-    list($year, $month, $day) = explode('-', $date);
-    list($hour, $minute, $second) = explode(':', $time);
-
-    $timestamp = mktime($hour, $minute, $second, $month, $day, $year);
-
-    return $timestamp;
+	require 'settings.php';
+	
+    return strtotime( $useUTC ? "$str UTC" : $str );
 }
 
 //------------------------------------------------------------------------------
