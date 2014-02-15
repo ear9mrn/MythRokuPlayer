@@ -140,6 +140,10 @@ function parseCategoryNode(xml as object) as dynamic
     'special categories are considered normal, others have unique types
     if xml.GetName() = "category" then
         print "category: " + xml@title + " | " + xml@description
+        
+        'support original channel which supplied Settings in category feed
+        if xml@title = "Settings" return invalid 
+        
         o.Type = "normal"
         o.Title = xml@title
         o.Description = xml@Description

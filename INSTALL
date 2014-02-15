@@ -8,6 +8,7 @@ Prerequisites:
  - Functioning MythTV backend and MythWeb with function streaming of recordings.
  - All recordings and videos stored in H.264 format (.mp4, .m4v, .mov).
  - Web user (e.g. apache) permissions to delete recordings.
+ - php-pdo, php-xml and php-gd
  - See 'Tools' section below for some optional prerequisites.
 
 For more information see the Roku developer site:
@@ -17,11 +18,22 @@ For more information see the Roku developer site:
 Setup
 --------------------------------------------------------------------------------
 
- 1) Set your Roku to development mode
+ 1) Install the private channel or "side-load" to your Roku to development mode
 
+    If you use the private channel (http://owner.roku.com/Account/ChannelCode/?code=YWWMH) 
+    then you can skip to #2 and ignore #5
+    
     With your Roku remote, enter the following:
         Home 3x, Up 2x, Right, Left, Right, Left, Right
 
+    Make note of the IP and the password (firmware asof 5.2) that you set!
+    
+    add the following to your .bashrc file "ROKU_DEV_TARGET=roku.ip" 
+    Where roku.ip is the ip address of your Roku player.
+    
+    for Roku box with 5.2 or later firmware a side-load requires authentication.
+    add ROKU_DEV_PASSWORD=roku.passwd to your environment as above.
+    
  2) Modify MythWeb to enable streaming of H.264 files
 
 	Modify /usr/share/mythtv/mythweb/includes/utils.php by adding the following
