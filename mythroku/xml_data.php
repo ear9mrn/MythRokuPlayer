@@ -161,6 +161,8 @@ function build_xml_vid( $sql_result, $index )
     while ( $db_field = mysql_fetch_assoc($sql_result) )
     {
         $filename = $db_field['filename'];
+	$fname = pathinfo($filename, PATHINFO_FILENAME);
+	$fpath = pathinfo($filename, PATHINFO_DIRNAME);
 
         $contentType = "movie";
         $episode     = "";
@@ -201,6 +203,9 @@ function build_xml_vid( $sql_result, $index )
             'streamQuality'   => $quality,
             'streamContentId' => html_cleanup($filename),
             'streamFormat'    => pathinfo($filename, PATHINFO_EXTENSION),
+            'srtUrl'          => "$mythtvdata/video/" . html_encode($fpath .'/'. $fname . '.srt'),# todo unless exists
+            'hdbifUrl'        => "$mythtvdata/video/" . html_encode($fpath .'/'. $fname . '_hd.bif'),# todo unless exists
+            'sdbifUrl'        => "$mythtvdata/video/" . html_encode($fpath .'/'. $fname . '_sd.bif'),# todo unless exists
             'isHD'        => $isHD,
             'episode'     => html_cleanup($episode),
             'genres'      => html_cleanup($genre),
@@ -267,6 +272,9 @@ function build_xml_rec( $sql_result, $index )
             'streamQuality'   => $quality,
             'streamContentId' => html_cleanup($filename),
             'streamFormat'    => pathinfo($filename, PATHINFO_EXTENSION),
+            'srtUrl'          => "$WebServer/pl/stream/" . html_encode($chanid_strtime) . "/srt",
+            'hdbifUrl'        => "$WebServer/pl/stream/" . html_encode($chanid_strtime) . "/bif/hd",
+            'sdbifUrl'        => "$WebServer/pl/stream/" . html_encode($chanid_strtime) . "/bif/sd",
             'isHD'        => $isHD,
             'episode'     => html_cleanup($episode),
             'genres'      => html_cleanup($db_field['category']),

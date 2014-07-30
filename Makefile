@@ -37,7 +37,7 @@
 APPNAME = MythRokuPlayer
 VERSION = 1.1
 
-ZIP_EXCLUDE= -x mythroku\* -x tools\* -x .\*
+ZIP_EXCLUDE= -x mythroku\* -x tools\* -x zips\* -x .\*
 
 include app.mk
 

@@ -47,6 +47,9 @@ function xml_file( $args )
             <streamQuality>{$args['streamQuality']}</streamQuality>
             <streamContentId>{$args['streamContentId']}</streamContentId>
             <streamFormat>{$args['streamFormat']}</streamFormat>
+            <srtUrl>{$args['srtUrl']}</srtUrl>
+            <hdbifUrl>{$args['hdbifUrl']}</hdbifUrl>
+            <sdbifUrl>{$args['sdbifUrl']}</sdbifUrl>
         </media>
         <isHD>{$args['isHD']}</isHD>
         <episode>{$args['episode']}</episode>
