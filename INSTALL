@@ -177,4 +177,6 @@ rokuencode.sh:
 
     Prerequisites:
         - HandBrakeCLI: To convert recordings into H.264 format.
+        - CCExtractor: To extract srt subtitles
+        - ffmpeg & biftool: To create bif trick files for fast forward/rewind
 
