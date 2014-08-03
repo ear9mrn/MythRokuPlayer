@@ -9,6 +9,14 @@ MPGFILE=$2
 DATABASEUSER=mythtv
 DATABASEPASSWORD=mythtv
 
+# extract subtitles
+srtbname=`echo $MPGFILE | sed 's/\(.*\)\..*/\1/'`
+srtname="$MYTHDIR/$srtbname.srt"
+
+# extract subtitles
+/usr/bin/ccextractor -90090 --fixpadding --nofontcolor -out=srt --sentencecap "$MYTHDIR/$MPGFILE" -o "$srtname"
+
+# create mp4
 newbname=`echo $MPGFILE | sed 's/\(.*\)\..*/\1/'`
 newname="$MYTHDIR/$newbname.mp4"
 
@@ -21,6 +29,27 @@ mysql --user=$DATABASEUSER --password=$DATABASEPASSWORD mythconverg < /tmp/updat
 
 # update the seek table
 mythcommflag --file $newname --rebuild
+
+# create bif trick files
+bifbname=`echo $MPGFILE | sed 's/\(.*\)\..*/\1/'`
+sdbifname="/tmp/${bifbname}_sd"
+hdbifname="/tmp/${bifbname}_hd"
+
+mkdir $sdbifname
+mkdir $hdbifname
+
+/usr/bin/ffmpeg -i "$MYTHDIR/$MPGFILE" -r .1 -s 240x180 "$sdbifname/%08d.jpg"
+/usr/bin/ffmpeg -i "$MYTHDIR/$MPGFILE" -r .1 -s 320x240 "$hdbifname/%08d.jpg"
+
+cd /tmp
+/usr/bin/biftool -t 10000 "$sdbifname"
+/usr/bin/biftool -t 10000 "$hdbifname"
+
+rm -rf "$sdbifname"
+rm -rf "$hdbifname"
+
+mv "$sdbifname.bif" $MYTHDIR
+mv "$hdbifname.bif" $MYTHDIR
 
 # remove the orignal mpg
 rm $MYTHDIR/$MPGFILE

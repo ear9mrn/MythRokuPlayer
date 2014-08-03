@@ -100,6 +100,35 @@ function showDetailScreen(screen as object, showList as object, showIndex as int
 
                 end if
 
+                'set captions
+                if msg.GetIndex() = 9 then
+                    srtOnOff = RegRead("MythRokuSrtOnOff")
+
+                    'set to a default value if reg is empty
+                    if (srtOnOff = invalid) then
+                        print "MythRokuSrtOnOff not found in the registry"
+                        srtOnOff = "srtOff"
+                        'RegWrite("MythRokuSrtOnOff", srtOnOff)
+                    end if
+
+                    print "subtitles button pressed. current value: " + srtOnOff
+
+                    Dbg("MythRoku: change srtOnOff. current value: " + srtOnOff)
+
+                    'toggle values
+                    if (srtOnOff = "srtOn")
+                        srtOnOff = "srtOff"
+                    else
+                        srtOnOff = "srtOn"
+                    end if
+
+                    RegWrite("MythRokuSrtOnOff", srtOnOff)
+
+                    Dbg("MythRoku: change srtOnOff. new value: " + srtOnOff)
+
+                    refreshShowDetail(screen, showList, showIndex)
+                end if
+
             end if
         else
             print "Unexpected message class: "; type(msg)
@@ -136,6 +165,22 @@ Function refreshShowDetail(screen As Object, showList As Object, showIndex as In
 
     if show.Recording then
         screen.AddButton(7, "Delete")
+    end if
+
+    'set captions
+    srtOnOff = RegRead("MythRokuSrtOnOff")
+
+    'set to a default value if reg is empty
+    if (srtOnOff = invalid) then
+        print "MythRokuSrtOnOff not found in the registry"
+        srtOnOff = "srtOff"
+        RegWrite("MythRokuSrtOnOff", srtOnOff)
+    end if
+
+    if (srtOnOff = "srtOn")
+        screen.AddButton(9, "Subtiles are on")
+    else
+        screen.AddButton(9, "Subtiles are off")
     end if
 
     screen.SetContent(show)
