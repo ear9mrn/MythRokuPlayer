@@ -210,7 +210,7 @@ function parse_file(element as object) as object
     item.SDBifUrl       = validstr(e.sdbifsrtUrl.GetText())
     item.SubtitleUrl    = validstr(e.srtUrl.GetText())
     item.SubtitleConfig = {
-        ShowSubtitle: 1 ' alternatively use screen.ShowSubtitle(true) to toggle Srt
+        'ShowSubtitle: 1 ' alternatively use screen.ShowSubtitle(true) to toggle Srt
         TrackName: item.SubtitleUrl
     }
 
