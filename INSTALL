@@ -138,6 +138,9 @@ Setup
 
 	    http//192.168.1.10/mythweb/mythroku
 
+ 6) Copy CCExtractor & biftool to /usr/bin to make them available system wide
+    if you intend to use subtitles & the Roku FF/REW bif trick files.
+
 --------------------------------------------------------------------------------
 Debugging
 --------------------------------------------------------------------------------
@@ -177,6 +180,6 @@ rokuencode.sh:
 
     Prerequisites:
         - HandBrakeCLI: To convert recordings into H.264 format.
-        - CCExtractor: To extract srt subtitles
-        - ffmpeg & biftool: To create bif trick files for fast forward/rewind
+        - CCExtractor: To extract srt subtitles (download from http://ccextractor.sourceforge.net/download-ccextractor.html)
+        - ffmpeg & biftool: To create bif trick files for fast forward/rewind; biftool is part of the Roku SDK. You must register your Roku account as a developer to download the SDK at https://owner.roku.com/Developer.
 
