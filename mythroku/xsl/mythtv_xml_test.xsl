@@ -46,6 +46,9 @@
 
             <xsl:if test="itemType = 'file'">
                 <xsl:variable name="url" select="media/streamUrl" />
+                <xsl:variable name="srtUrl" select="media/srtUrl" />
+                <xsl:variable name="hdbifUrl" select="media/hdbifUrl" />
+                <xsl:variable name="sdbifUrl" select="media/sdbifUrl" />
 
                 <b><xsl:text>[#</xsl:text><xsl:value-of select="index" /><xsl:text>] </xsl:text>
                 <xsl:value-of select="title" /><xsl:text> </xsl:text></b>
@@ -74,6 +77,9 @@
                         <td><b>Episode:</b></td><td><xsl:value-of select="episode" /></td>
                     </tr>
                     <tr><td colspan="8"><b>Stream Url:</b><br/><a href="{$url}"><xsl:copy-of select="$url" /></a></td></tr>
+                    <tr><td colspan="8"><b>Srt Url:</b><br/><a href="{$srtUrl}"><xsl:copy-of select="$srtUrl" /></a></td></tr>
+                    <tr><td colspan="8"><b>HDBif Url:</b><br/><a href="{$hdbifUrl}"><xsl:copy-of select="$hdbifUrl" /></a></td></tr>
+                    <tr><td colspan="8"><b>SDBif Url:</b><br/><a href="{$sdbifUrl}"><xsl:copy-of select="$sdbifUrl" /></a></td></tr>
                     <tr><td colspan="8"><b>Synopsis:</b><br/><xsl:value-of select="synopsis" /></td></tr>
                     <xsl:if test="isRecording = 'true'">
                         <xsl:variable name="delcmd" select="delCmd" />

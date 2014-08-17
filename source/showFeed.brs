@@ -71,6 +71,11 @@ function init_show_feed_item() as object
     o.StreamContentIDs  = CreateObject("roArray", 1, true)
     o.StreamFormat      = CreateObject("roArray", 1, true)
 
+    o.HDBifUrl       = ""
+    o.SDBifUrl       = ""
+    o.SubtitleUrl    = ""
+    o.SubtitleConfig = ""
+
     o.Length            = 0
     o.BookmarkPosition  = 0
     o.ReleaseDate       = ""
@@ -200,6 +205,14 @@ function parse_file(element as object) as object
     item.StreamQualities.Push( validstr(e.streamQuality.GetText()))
     item.StreamContentIDs.Push(validstr(e.streamContentId.GetText()))
     item.StreamFormat.Push(    validstr(e.streamFormat.GetText()))
+
+    item.HDBifUrl       = validstr(e.hdbifUrl.GetText())
+    item.SDBifUrl       = validstr(e.sdbifsrtUrl.GetText())
+    item.SubtitleUrl    = validstr(e.srtUrl.GetText())
+    item.SubtitleConfig = {
+        'ShowSubtitle: 1 ' alternatively use screen.ShowSubtitle(true) to toggle Srt
+        TrackName: item.SubtitleUrl
+    }
 
     item.Length             = strtoi(  element.runtime.GetText())
 '   item.BookmarkPosition   = strtoi(  element..GetText())

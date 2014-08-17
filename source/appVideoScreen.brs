@@ -27,6 +27,23 @@ Function showVideoScreen(episode As Object)
     screen.Show()
     screen.SetPositionNotificationPeriod(30)
     screen.SetContent(episode)
+
+    'set captions
+    srtOnOff = RegRead("MythRokuSrtOnOff")
+
+    'set to a default value if reg is empty
+    if (srtOnOff = invalid) then
+        print "MythRokuSrtOnOff not found in the registry"
+        srtOnOff = "srtOff"
+        RegWrite("MythRokuSrtOnOff", srtOnOff)
+    end if
+
+    if (srtOnOff = "srtOn")
+        screen.ShowSubtitle(true)
+    else
+        screen.ShowSubtitle(false)
+    end if
+
     screen.Show()
 
     'Uncomment this line to dump the contents of the episode to be played

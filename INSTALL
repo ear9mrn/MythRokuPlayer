@@ -40,15 +40,43 @@ Setup
     around line 247:
 
 	    case 'mp4' : return "$url.mp4";
+            case 'srt' : return "$url.srt";
+            case 'bif' : return "$url.bif";
 
-    Modify /usr/share/mythtv/mythweb/modules/stream/stream_raw.pl by adding an
+    Modify /usr/share/mythtv/mythweb/modules/stream/stream_raw.pl by adding
     additonal elseif in the file type section:
 
-        elsif ($basename =~ /\.mp4$/)
-        {
-            $type = 'video/mp4';
-            $suffix = '.mp4';
-	    }
+    if ($Path[3] =~ /srt/) {
+        #TODO language $Path[4]
+        $filename =~ s/\..+?$/\.srt/g;
+        $basename =~ s/\..+?$/\.srt/g;
+        $type   = 'text/plain';
+        $suffix = '.srt';
+    }
+    elsif ($Path[3] =~ /bif/) {
+        my $HdSd = "";
+        $HdSd = "_$Path[4]" if ($Path[4]);
+        $filename =~ s/\..+?$/$HdSd\.bif/g;
+        $basename =~ s/\..+?$/$HdSd\.bif/g;
+        $type   = 'image/jpeg';
+        $suffix = '.bif';
+    }
+    elsif ($basename =~ /\.mpe?g2?$/) {
+
+[...]
+
+    elsif ($basename =~ /\.mp4$/) {
+        $type   = 'video/mp4';
+        $suffix = '.mp4';
+    }
+    elsif ($basename =~ /\.srt$/) {
+        $type   = 'text/plain';
+        $suffix = '.srt';
+    }
+    elsif ($basename =~ /\.bif$/) {
+        $type   = 'image/jpeg';
+        $suffix = '.bif';
+    }
 
 	if you are using authentication to protect your mythweb (best practice)
 	you need to add the following to your mythweb.conf file (near the top)
@@ -110,6 +138,9 @@ Setup
 
 	    http//192.168.1.10/mythweb/mythroku
 
+ 6) Copy CCExtractor & biftool to /usr/bin to make them available system wide
+    if you intend to use subtitles & the Roku FF/REW bif trick files.
+
 --------------------------------------------------------------------------------
 Debugging
 --------------------------------------------------------------------------------
@@ -149,4 +180,6 @@ rokuencode.sh:
 
     Prerequisites:
         - HandBrakeCLI: To convert recordings into H.264 format.
+        - CCExtractor: To extract srt subtitles (download from http://ccextractor.sourceforge.net/download-ccextractor.html)
+        - ffmpeg & biftool: To create bif trick files for fast forward/rewind; biftool is part of the Roku SDK. You must register your Roku account as a developer to download the SDK at https://owner.roku.com/Developer.
 
