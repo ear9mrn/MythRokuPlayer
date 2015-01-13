@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Redirect stdout ( > ) into a named pipe ( >() ) running "tee"
+exec > >(tee /tmp/rokuencode.log)
+
+# Without this, only stdout would be captured - i.e. your
+# log file would not contain any error messages.
+# SEE answer by Adam Spiers, which keeps STDERR a seperate stream -
+# I did not want to steal from him by simply adding his answer to mine.
+exec 2>&1
+
+set -x
+
 renice +15 --pid $$
 
 #convert mpeg file to mp4 using handbrakecli
@@ -22,17 +33,18 @@ fi
 newbname=`echo $MPGFILE | sed 's/\(.*\)\..*/\1/'`
 newname="$MYTHDIR/$newbname.mp4"
 
-/usr/bin/HandBrakeCLI --preset='iPhone & iPod Touch' -i $MYTHDIR/$MPGFILE -o $newname 
+/usr/bin/HandBrakeCLI --preset='Normal' -i $MYTHDIR/$MPGFILE -o $newname 
 
 # update the db to point to the mp4
 NEWFILESIZE=`du -b "$newname" | cut -f1`
-echo "UPDATE recorded SET basename='$newbname.mp4',filesize='$NEWFILESIZE' WHERE basename='$2';" > /tmp/update-database.sql
-mysql --user=$DATABASEUSER --password=$DATABASEPASSWORD mythconverg < /tmp/update-database.sql
+echo "UPDATE recorded SET basename='$newbname.mp4',filesize='$NEWFILESIZE' WHERE basename='$2';" | mysql --user=$DATABASEUSER --password=$DATABASEPASSWORD mythconverg
 
 # update the seek table
 mythcommflag --file $newname --rebuild
 
-if [ -f /usr/bin/biftool -a -f /usr/bin/ffmpeg ]; then
+biftool=$(which biftool)
+ffmpeg=$(which ffmpeg)
+if [ -f $biftool -a -f $ffmpeg ]; then
   # create bif trick files
   bifbname=`echo $MPGFILE | sed 's/\(.*\)\..*/\1/'`
   sdbifname="/var/tmp/${bifbname}_sd"
@@ -41,12 +53,12 @@ if [ -f /usr/bin/biftool -a -f /usr/bin/ffmpeg ]; then
   mkdir $sdbifname
   mkdir $hdbifname
 
-  /usr/bin/ffmpeg -i "$MYTHDIR/$MPGFILE" -r .1 -s 240x180 "$sdbifname/%08d.jpg"
-  /usr/bin/ffmpeg -i "$MYTHDIR/$MPGFILE" -r .1 -s 320x240 "$hdbifname/%08d.jpg"
+  $ffmpeg -i "$MYTHDIR/$MPGFILE" -r .1 -s 240x180 "$sdbifname/%08d.jpg"
+  $ffmpeg -i "$MYTHDIR/$MPGFILE" -r .1 -s 320x240 "$hdbifname/%08d.jpg"
 
   cd /var/tmp
-  /usr/bin/biftool -t 10000 "$sdbifname"
-  /usr/bin/biftool -t 10000 "$hdbifname"
+  $biftool -t 10000 "$sdbifname"
+  $biftool -t 10000 "$hdbifname"
 
   rm -rf "$sdbifname"
   rm -rf "$hdbifname"
