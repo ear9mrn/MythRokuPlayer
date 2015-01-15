@@ -102,8 +102,8 @@ Setup
 	        Allow from 192.168.1.0
 	    </LocationMatch>
 
-    Edit the settings.php file with your local parameters (i.e. webserver URL
-    and MySQL credentials.
+    Copy the settings.php.template file to settings.php, then edit to reflect 
+    your local environment (i.e. webserver URL and MySQL credentials).
 
  4) Convert all video files to MPEG-4 (H.264) format
 
