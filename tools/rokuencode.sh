@@ -17,8 +17,14 @@ renice +15 --pid $$
 MYTHDIR=$1
 MPGFILE=$2
 
-DATABASEUSER=mythtv
-DATABASEPASSWORD=mythtv
+TOOLS=$(dirname $0)
+
+if [ ! -f $TOOLS/rokuencode-settings ]; then
+  echo "No such file: $TOOLS/rokuencode-settings"
+  exit 1
+fi
+
+source $TOOLS/rokuencode-settings
 
 if [ -f /usr/bin/ccextractor ]; then
   # extract subtitles
@@ -33,7 +39,7 @@ fi
 newbname=`echo $MPGFILE | sed 's/\(.*\)\..*/\1/'`
 newname="$MYTHDIR/$newbname.mp4"
 
-/usr/bin/HandBrakeCLI --preset='Normal' -i $MYTHDIR/$MPGFILE -o $newname 
+/usr/bin/HandBrakeCLI --preset="$HANDBRAKE_PRESET" -i $MYTHDIR/$MPGFILE -o $newname 
 
 # update the db to point to the mp4
 NEWFILESIZE=`du -b "$newname" | cut -f1`
